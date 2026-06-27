@@ -118,6 +118,7 @@
     <h2 id="sectionModalTitle">סעיף במדריך</h2>
     <input type="hidden" id="s_id">
     <div class="field"><label>כותרת הסעיף</label><input id="s_title" placeholder="לדוגמה: כרטיסי IC"></div>
+    <div class="field"><label>קישור לתמונה (URL)</label><input id="s_photo" placeholder="https://...jpg" oninput="previewSectionImg()"><img id="sectionImgPreview" class="img-preview"></div>
     <div class="field"><label>תוכן הסעיף</label><textarea id="s_content" rows="10"></textarea></div>
     <div class="modal-actions">
       <button id="sectionCancelBtn" class="link-edit">ביטול</button>
@@ -193,6 +194,12 @@ function renderGuide(){
   sorted.forEach(sec=>{
     const div = document.createElement('div');
     div.className = 'guide-section';
+    if(sec.photoUrl){
+      const img = document.createElement('img');
+      img.className='card-photo'; img.src=sec.photoUrl; img.loading='lazy';
+      img.onerror = ()=>{ img.style.display='none'; };
+      div.appendChild(img);
+    }
     const h3 = document.createElement('h3'); h3.textContent = sec.title;
     const p = document.createElement('p'); p.innerHTML = linkify(sec.content);
     div.appendChild(h3); div.appendChild(p);
@@ -216,7 +223,9 @@ function openSectionModal(sec){
   document.getElementById('sectionModalTitle').textContent = sec ? 'עריכת סעיף' : 'סעיף חדש';
   document.getElementById('s_id').value = sec ? sec.id : '';
   document.getElementById('s_title').value = sec ? sec.title : '';
+  document.getElementById('s_photo').value = sec ? (sec.photoUrl||'') : '';
   document.getElementById('s_content').value = sec ? sec.content : '';
+  previewSectionImg();
   document.getElementById('sectionBackdrop').classList.add('open');
 }
 
@@ -497,6 +506,11 @@ window.previewImg = function(){
   const img = document.getElementById('imgPreview');
   if(url){ img.src = url; img.style.display='block'; } else { img.style.display='none'; }
 };
+window.previewSectionImg = function(){
+  const url = document.getElementById('s_photo').value.trim();
+  const img = document.getElementById('sectionImgPreview');
+  if(url){ img.src = url; img.style.display='block'; } else { img.style.display='none'; }
+};
 
 document.getElementById('addBtn').onclick = ()=>openModal(null);
 document.getElementById('cancelBtn').onclick = closeModal;
@@ -563,13 +577,14 @@ document.getElementById('sectionBackdrop').onclick = (e)=>{ if(e.target.id==='se
 document.getElementById('sectionSaveBtn').onclick = async ()=>{
   const id = document.getElementById('s_id').value;
   const title = document.getElementById('s_title').value.trim();
+  const photoUrl = document.getElementById('s_photo').value.trim();
   const content = document.getElementById('s_content').value.trim();
   if(!title){ alert('יש להזין כותרת'); return; }
   if(id){
-    await updateDoc(doc(db,'guide',id), {title, content});
+    await updateDoc(doc(db,'guide',id), {title, photoUrl, content});
   } else {
     const maxOrder = guideData.reduce((m,s)=>Math.max(m, s.order||0), 0);
-    await addDoc(guideRef, {title, content, order: maxOrder+1});
+    await addDoc(guideRef, {title, photoUrl, content, order: maxOrder+1});
   }
   document.getElementById('sectionBackdrop').classList.remove('open');
 };
