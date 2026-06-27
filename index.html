@@ -55,6 +55,12 @@
   .sync-ok{background:#1e4a2c;color:#9cf0b0;}
   .sync-bad{background:#3a1e1e;color:#ff9c9c;}
   .img-preview{max-width:100%;max-height:120px;border-radius:8px;margin-top:4px;display:none;}
+  .guide-modal .modal{max-width:600px;}
+  .guide-section{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;}
+  .guide-section h3{margin:0 0 6px;font-size:15px;color:var(--accent);}
+  .guide-section p{margin:0;font-size:13px;line-height:1.6;white-space:pre-wrap;color:var(--text);}
+  .guide-section .actions{margin-top:8px;}
+  .btn-link{background:var(--card2);color:var(--accent2);border:1px solid var(--border);font-size:13px;}
 </style>
 </head>
 <body>
@@ -64,6 +70,7 @@
   <div class="toolbar">
     <select id="dayFilter"><option value="all">כל הימים</option></select>
     <input id="searchBox" placeholder="חיפוש מקום..." style="flex:1;min-width:120px;">
+    <button id="guideBtn" class="link-edit">📖 מדריך לוגיסטי</button>
     <button id="resetBtn" class="link-del">איפוס לנתוני בסיס</button>
   </div>
   <div class="stats" id="stats"><span id="syncBadge" class="sync-badge">מתחבר...</span></div>
@@ -95,6 +102,30 @@
   </div>
 </div>
 
+<div class="modal-backdrop guide-modal" id="guideBackdrop">
+  <div class="modal">
+    <h2>📖 המדריך הלוגיסטי המורחב</h2>
+    <div id="guideList"></div>
+    <div class="modal-actions">
+      <button id="guideAddBtn" class="btn-secondary">+ הוסף סעיף</button>
+      <button id="guideCloseBtn" class="link-edit">סגירה</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="sectionBackdrop">
+  <div class="modal">
+    <h2 id="sectionModalTitle">סעיף במדריך</h2>
+    <input type="hidden" id="s_id">
+    <div class="field"><label>כותרת הסעיף</label><input id="s_title" placeholder="לדוגמה: כרטיסי IC"></div>
+    <div class="field"><label>תוכן הסעיף</label><textarea id="s_content" rows="10"></textarea></div>
+    <div class="modal-actions">
+      <button id="sectionCancelBtn" class="link-edit">ביטול</button>
+      <button id="sectionSaveBtn" class="btn-primary">שמירה</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
@@ -113,6 +144,65 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const pointsRef = collection(db, "points");
+const guideRef = collection(db, "guide");
+
+const DEFAULT_GUIDE = [
+{order:1, title:"אפליקציות חובה להתקנה (לפני הטיסה)", content:"Google Maps: האפליקציה הטובה ביותר לניווט רגלי ובתחבורה ציבורית ביפן. מעודכנת בזמן אמת, מראה מאיזה רציף הרכבת יוצאת ובאיזה קרון כדאי לשבת.\n\nJapan Travel by NAVITIME: מאפשרת פילטור מסלולים לפי סוגי כרטיסים (קווי JR בלבד או כרטיסי סאבוויי).\n\nGoogle Translate: חובה להוריד את חבילת השפה היפנית לשימוש אופליין. תכונת המצלמה מצילת חיים לקריאת תפריטים ושילוט.\n\nSmartEX: האפליקציה הרשמית להזמנת כרטיסי שינקנסן בקו טוקיו-קיוטו-אוסקה, מאפשרת לקשר לכרטיס IC הדיגיטלי."},
+{order:2, title:"תחבורה ציבורית וכרטיסי IC (Suica / Pasmo / Icoca)", content:"כרטיסי IC הם ארנק אלקטרוני נטען לתשלום ברכבות, סאבוויי, אוטובוסים, מכונות שתייה וחנויות נוחות.\n\nלאייפון: אל תקנו כרטיס פיזי! פתחו Apple Wallet, הוסיפו Transit Card מסוג Suica או Pasmo, וטענו עם כרטיס אשראי (Mastercard/אמריקן אקספרס עובדים הכי טוב, Visa עלולה להיתקל בבעיות).\n\nלאנדרואיד: יש לרכוש כרטיס פיזי בשדה התעופה (Welcome Suica או Pasmo Passport - בלי פיקדון, תקפים 28 יום, או ICOCA באוסקה)."},
+{order:3, title:"האם משתלם JR Pass?", content:"לא! באוקטובר 2023 מחירי ה-JR Pass הארצי עלו ב-65-70%. במסלול חד-כיווני מאוסקה/קיוטו לטוקיו, פס ל-7 ימים יקר כמעט פי 2 מרכישת כרטיסים בודדים.\n\nהחלופה הנכונה: כרטיס נפרד ל-Haruka Express משדה התעופה לקיוטו, כרטיס IC לרכבות מקומיות, וכרטיס כיווני אחד לשינקנסן קיוטו-טוקיו."},
+{order:4, title:"רכישת כרטיסים לשינקנסן", content:"בנובמבר (שיא השלכת) רכבות השינקנסן בין קיוטו לטוקיו עלולות להיות מלאות.\n\nאיך לרכוש: דרך אתר/אפליקציית SmartEX בדיוק 30 יום לפני הנסיעה. הזמינו מקומות שמורים ברכבת Nozomi (כשעתיים ורבע).\n\nטיפ למזוודות: אם המזוודה מעל 160 ס\"מ כולל גלגלים, חובה לבחור מושב עם מקום למזוודות גדולות (השורה האחרונה בקרון, בלי תוספת תשלום אך מקומות מוגבלים).\n\nטיפ לנוף: מקיוטו לטוקיו בחרו מושבים בשורה E (צד שמאל) לראות את הר פוג'י כ-45 דקות לפני ההגעה."},
+{order:5, title:"התנהלות בתחנות רכבת", content:"תחנות כמו קיוטו, שינג'וקו ושיבויה הן ערים תת-קרקעיות. עקבו אחרי שם היציאה (Central Exit, Hachiko Exit וכו') כפי ש-Google Maps מנחה, לא לפי שם הרחוב.\n\nעמדו בתור מסודר על הסימונים שעל הרצפה ברציף - הרכבות עוצרות בדיוק על הסנטימטר.\n\nשמרו על שקט ברכבות: העבירו טלפונים למצב רטט ואל תנהלו שיחות קוליות."},
+{order:6, title:"תשלום, אינטרנט ו-SIM", content:"מזומן מול אשראי: רוב החנויות והמסעדות מקבלות אשראי בינלאומי, אבל שווקי אוכל, מקדשים קטנים ומכונות כרטיסים דורשים מזומן. מומלץ למשוך כ-20,000 ין במזומן לזוג, בכספומטים של 7-Eleven (7-Bank).\n\neSIM: רכשו eSIM (Airalo, Nomad, Ubigi) לפני הטיסה - לפחות 10-20GB. כך נשאר מספר הוואטסאפ הישראלי פעיל עם רשת SoftBank/Docomo."},
+{order:7, title:"טיפים למטיילים עצמאיים בכושר טוב", content:"שירות משלוח מזוודות (Takkyubin/Takuhaibin): הסוד השמור של המטיילים המנוסים. חברת Yamato Transport (לוגו חתולה שחורה) מעבירה מזוודות בין מלונות תמורת כ-2,000-3,000 ין למזוודה, מגיעות למחרת. אפשר לנסוע בשינקנסן רק עם תיק גב.\n\nנעליים: ילכו 15,000-25,000 צעדים ביום כולל שיפועים ומדרגות אבן. הביאו נעלי הליכה איכותיות עם סוליה מונעת החלקה - מדרגות מקדשים ושורשי עצים חלקלקים בנובמבר."}
+];
+
+let guideData = [];
+
+async function ensureGuideSeeded(){
+  const snap = await getDocs(guideRef);
+  if(snap.empty){
+    const batch = writeBatch(db);
+    DEFAULT_GUIDE.forEach(item=>{
+      const ref = doc(guideRef);
+      batch.set(ref, item);
+    });
+    await batch.commit();
+  }
+}
+
+function renderGuide(){
+  const list = document.getElementById('guideList');
+  list.innerHTML = '';
+  const sorted = [...guideData].sort((a,b)=>(a.order||999)-(b.order||999));
+  sorted.forEach(sec=>{
+    const div = document.createElement('div');
+    div.className = 'guide-section';
+    const h3 = document.createElement('h3'); h3.textContent = sec.title;
+    const p = document.createElement('p'); p.textContent = sec.content;
+    div.appendChild(h3); div.appendChild(p);
+    const actions = document.createElement('div'); actions.className='actions';
+    const editBtn = document.createElement('button');
+    editBtn.className='link-edit'; editBtn.textContent='✏ עריכה';
+    editBtn.onclick = ()=>openSectionModal(sec);
+    actions.appendChild(editBtn);
+    const delBtn = document.createElement('button');
+    delBtn.className='link-del'; delBtn.textContent='🗑 מחיקה';
+    delBtn.onclick = ()=>{
+      if(confirm('למחוק את הסעיף "'+sec.title+'"?')) deleteDoc(doc(db,'guide',sec.id));
+    };
+    actions.appendChild(delBtn);
+    div.appendChild(actions);
+    list.appendChild(div);
+  });
+}
+
+function openSectionModal(sec){
+  document.getElementById('sectionModalTitle').textContent = sec ? 'עריכת סעיף' : 'סעיף חדש';
+  document.getElementById('s_id').value = sec ? sec.id : '';
+  document.getElementById('s_title').value = sec ? sec.title : '';
+  document.getElementById('s_content').value = sec ? sec.content : '';
+  document.getElementById('sectionBackdrop').classList.add('open');
+}
 
 const DEFAULT_DATA = [
 {"day":"יום 1","date":"13/11/2026","time":"18:00-19:30","place":"שדה התעופה קנסאי","address":"Kansai International Airport Japan","notes":"נחיתה הגירה כבודה הפעלת eSIM החלפת כסף","cost":"-"},
@@ -442,7 +532,34 @@ onSnapshot(pointsRef, (snap)=>{
   document.getElementById('stats').innerHTML = '<span class="sync-badge sync-bad">⚠ שגיאת חיבור</span> ' + err.message;
 });
 
+onSnapshot(guideRef, (snap)=>{
+  guideData = snap.docs.map(d=>({id:d.id, ...d.data()}));
+  renderGuide();
+});
+
+document.getElementById('guideBtn').onclick = ()=>document.getElementById('guideBackdrop').classList.add('open');
+document.getElementById('guideCloseBtn').onclick = ()=>document.getElementById('guideBackdrop').classList.remove('open');
+document.getElementById('guideBackdrop').onclick = (e)=>{ if(e.target.id==='guideBackdrop') document.getElementById('guideBackdrop').classList.remove('open'); };
+document.getElementById('guideAddBtn').onclick = ()=>openSectionModal(null);
+document.getElementById('sectionCancelBtn').onclick = ()=>document.getElementById('sectionBackdrop').classList.remove('open');
+document.getElementById('sectionBackdrop').onclick = (e)=>{ if(e.target.id==='sectionBackdrop') document.getElementById('sectionBackdrop').classList.remove('open'); };
+
+document.getElementById('sectionSaveBtn').onclick = async ()=>{
+  const id = document.getElementById('s_id').value;
+  const title = document.getElementById('s_title').value.trim();
+  const content = document.getElementById('s_content').value.trim();
+  if(!title){ alert('יש להזין כותרת'); return; }
+  if(id){
+    await updateDoc(doc(db,'guide',id), {title, content});
+  } else {
+    const maxOrder = guideData.reduce((m,s)=>Math.max(m, s.order||0), 0);
+    await addDoc(guideRef, {title, content, order: maxOrder+1});
+  }
+  document.getElementById('sectionBackdrop').classList.remove('open');
+};
+
 ensureSeeded();
+ensureGuideSeeded();
 </script>
 </body>
 </html>
