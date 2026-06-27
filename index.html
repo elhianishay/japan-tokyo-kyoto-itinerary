@@ -191,9 +191,18 @@ function telUrl(phone){
   return 'tel:' + phone.replace(/[^0-9+]/g,'');
 }
 
+function dayNum(day){
+  const m = String(day||'').match(/\d+/);
+  return m ? parseInt(m[0],10) : 9999;
+}
+function timeNum(time){
+  const m = String(time||'').match(/(\d{1,2}):(\d{2})/);
+  return m ? (parseInt(m[1],10)*60 + parseInt(m[2],10)) : 9999;
+}
 function uniqueDays(){
   const seen = [];
   data.forEach(d=>{ if(!seen.includes(d.day)) seen.push(d.day); });
+  seen.sort((a,b)=> dayNum(a)-dayNum(b) || String(a).localeCompare(String(b)));
   return seen;
 }
 
@@ -233,6 +242,11 @@ function render(){
   filtered.forEach(d=>{
     if(!grouped[d.day]){ grouped[d.day]=[]; order.push(d.day); }
     grouped[d.day].push(d);
+  });
+
+  order.sort((a,b)=> dayNum(a)-dayNum(b) || String(a).localeCompare(String(b)));
+  Object.keys(grouped).forEach(day=>{
+    grouped[day].sort((a,b)=> timeNum(a.time)-timeNum(b.time));
   });
 
   order.forEach(day=>{
