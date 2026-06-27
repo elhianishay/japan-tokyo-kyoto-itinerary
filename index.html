@@ -14,19 +14,23 @@
   header{padding:16px;background:var(--card);position:sticky;top:0;z-index:10;border-bottom:1px solid var(--border);}
   header h1{margin:0 0 8px;font-size:20px;}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-  select,input,button,textarea{background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;}
+  select,input,button,textarea{background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit;}
   button{cursor:pointer;}
   .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
   .btn-secondary{background:var(--accent2);border-color:var(--accent2);color:#fff;}
   main{padding:12px;max-width:760px;margin:0 auto;}
   .day-group{margin-bottom:18px;}
   .day-title{font-size:16px;font-weight:700;color:var(--accent);margin:14px 0 6px;padding-right:4px;}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;position:relative;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;position:relative;overflow:hidden;}
   .card.done{opacity:0.55;}
+  .card-photo{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block;background:var(--card2);}
   .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
   .card-time{color:var(--accent2);font-weight:700;font-size:13px;white-space:nowrap;}
   .card-name{font-size:16px;font-weight:700;margin:2px 0 4px;}
   .card-notes{color:var(--muted);font-size:13px;margin:4px 0;}
+  .card-desc{color:var(--text);font-size:13px;margin:8px 0;line-height:1.5;background:var(--card2);border-radius:8px;padding:10px;display:none;}
+  .card-desc.open{display:block;}
+  .toggle-desc{background:none;border:none;color:var(--accent2);font-size:12px;padding:4px 0;text-decoration:underline;}
   .card-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
   .pill{font-size:12px;padding:3px 8px;border-radius:20px;background:var(--card2);color:var(--muted);}
   .actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
@@ -35,7 +39,7 @@
   .link-call{background:#1e4a2c;color:#9cf0b0;border:1px solid #2c6f3c;}
   .link-edit{background:var(--card2);color:var(--text);border:1px solid var(--border);}
   .link-del{background:#3a1e1e;color:#ff9c9c;border:1px solid #6f2c2c;}
-  .check{position:absolute;left:12px;top:12px;width:20px;height:20px;}
+  .check{position:absolute;left:12px;top:12px;width:20px;height:20px;z-index:2;}
   .fab{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;border:none;border-radius:30px;padding:14px 26px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,0.4);}
   .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:50;align-items:center;justify-content:center;}
   .modal-backdrop.open{display:flex;}
@@ -47,6 +51,10 @@
   .modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:flex-end;}
   .empty-msg{color:var(--muted);text-align:center;margin-top:40px;font-size:14px;}
   .stats{font-size:12px;color:var(--muted);margin-top:4px;}
+  .sync-badge{font-size:11px;padding:2px 8px;border-radius:10px;margin-right:6px;}
+  .sync-ok{background:#1e4a2c;color:#9cf0b0;}
+  .sync-bad{background:#3a1e1e;color:#ff9c9c;}
+  .img-preview{max-width:100%;max-height:120px;border-radius:8px;margin-top:4px;display:none;}
 </style>
 </head>
 <body>
@@ -56,10 +64,9 @@
   <div class="toolbar">
     <select id="dayFilter"><option value="all">כל הימים</option></select>
     <input id="searchBox" placeholder="חיפוש מקום..." style="flex:1;min-width:120px;">
-    <button id="exportBtn" class="link-edit">ייצוא JSON</button>
     <button id="resetBtn" class="link-del">איפוס לנתוני בסיס</button>
   </div>
-  <div class="stats" id="stats"></div>
+  <div class="stats" id="stats"><span id="syncBadge" class="sync-badge">מתחבר...</span></div>
 </header>
 
 <main id="main"></main>
@@ -74,9 +81,12 @@
     <div class="field"><label>תאריך</label><input id="f_date" placeholder="26/11/2026"></div>
     <div class="field"><label>שעה</label><input id="f_time" placeholder="10:00-12:00"></div>
     <div class="field"><label>שם המקום</label><input id="f_place" placeholder="שם המקום"></div>
-    <div class="field"><label>כתובת (לניווט בגוגל מאפ)</label><input id="f_address" placeholder="כתובת באנגלית, למשל: Shibuya Tokyo Japan"></div>
+    <div class="field"><label>כתובת (לניווט אוטומטי בגוגל מאפ)</label><input id="f_address" placeholder="כתובת באנגלית, למשל: Shibuya Tokyo Japan"></div>
+    <div class="field"><label>קישור מפה מותאם (אופציונלי - גובר על הכתובת)</label><input id="f_maplink" placeholder="https://maps.google.com/..."></div>
+    <div class="field"><label>קישור לתמונה (URL)</label><input id="f_photo" placeholder="https://...jpg" oninput="previewImg()"><img id="imgPreview" class="img-preview"></div>
     <div class="field"><label>טלפון</label><input id="f_phone" placeholder="+81-..."></div>
-    <div class="field"><label>הערות</label><textarea id="f_notes" rows="3"></textarea></div>
+    <div class="field"><label>הערות קצרות</label><textarea id="f_notes" rows="2"></textarea></div>
+    <div class="field"><label>תיאור מורחב (מה יש לראות/לעשות שם)</label><textarea id="f_desc" rows="4"></textarea></div>
     <div class="field"><label>עלות</label><input id="f_cost" placeholder="500 יין"></div>
     <div class="modal-actions">
       <button id="cancelBtn" class="link-edit">ביטול</button>
@@ -85,82 +95,97 @@
   </div>
 </div>
 
-<script>
-const STORAGE_KEY = 'japan_trip_data_v1';
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, writeBatch
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD-f_jx1-kRQGa_uvvLctRyTpTPVxspS0Q",
+  authDomain: "japan-trip-2026-b637c.firebaseapp.com",
+  projectId: "japan-trip-2026-b637c",
+  storageBucket: "japan-trip-2026-b637c.firebasestorage.app",
+  messagingSenderId: "295377097765",
+  appId: "1:295377097765:web:b9e11e01a8fecf62b1dbcc"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const pointsRef = collection(db, "points");
 
 const DEFAULT_DATA = [
-{"day":"יום 1","date":"13/11/2026","time":"18:00-19:30","place":"שדה התעופה קנסאי","address":"Kansai International Airport Japan","phone":"","notes":"נחיתה הגירה כבודה הפעלת eSIM החלפת כסף","cost":"-"},
-{"day":"יום 1","date":"13/11/2026","time":"19:30-20:50","place":"רכבת הארוקה לתחנת קיוטו","address":"Kyoto Station Japan","phone":"","notes":"רכבת מהירה לקיוטו הזמנה מראש מומלצת","cost":"-"},
-{"day":"יום 1","date":"13/11/2026","time":"21:00","place":"צ'ק אין במלון וראמן","address":"Kyoto Station Japan","phone":"","notes":"ראמן חם בערב ההגעה","cost":"-"},
-{"day":"יום 2","date":"14/11/2026","time":"07:00-09:00","place":"מקדש פושימי אינארי","address":"68 Fukusa Yabunouchicho Fushimi Ward Kyoto Japan","phone":"","notes":"מומלץ מוקדם להימנע מתיירים עלייה לפסגת ההר בין שערי טוריי","cost":"חינם"},
-{"day":"יום 2","date":"14/11/2026","time":"09:30-13:00","place":"מקדש טופוקו ג'י","address":"15 Chome 778 Honmachi Higashiyama Ward Kyoto Japan","phone":"","notes":"הגשר המפורסם וגנים יער אחורי","cost":"1000 יין"},
-{"day":"יום 2","date":"14/11/2026","time":"13:30-15:30","place":"שוק נישיקי","address":"Nishiki Market Nakagyo Ward Kyoto Japan","phone":"","notes":"שוק אוכל וואגיו פירות ים חמוצים","cost":"חופשי"},
-{"day":"יום 2","date":"14/11/2026","time":"16:30-19:30","place":"מקדש קיומיזו דרה בלילה","address":"1 Chome 294 Kiyomizu Higashiyama Ward Kyoto Japan","phone":"","notes":"רחובות היסטוריים ותאורת לילה על השלכת","cost":"400 יין"},
-{"day":"יום 3","date":"15/11/2026","time":"08:30-09:30","place":"רכבת מדמאצ'יאנגי לקוראמה","address":"Demachiyanagi Station Kyoto Japan","phone":"","notes":"נסיעה לתחילת הטרק","cost":"1500 יין"},
-{"day":"יום 3","date":"15/11/2026","time":"09:30-13:00","place":"טרק מקוראמה לקיבונה","address":"Kurama dera Sakyo Ward Kyoto Japan","phone":"","notes":"טרק כארבע וחצי קילומטר דרך יער ארזים ושורשי עצים","cost":"-"},
-{"day":"יום 3","date":"15/11/2026","time":"13:00-15:00","place":"מקדש קיבונה וכפר קיבונה","address":"180 Kuramakibunacho Sakyo Ward Kyoto Japan","phone":"","notes":"מדרגות עם פנסי עץ אדומים וארוחת צהריים בכפר","cost":"חינם"},
-{"day":"יום 3","date":"15/11/2026","time":"18:00","place":"סמטת פונטוצ'ו","address":"Pontocho Kyoto Japan","phone":"","notes":"ערב מסעדות וסאקה על הנהר","cost":"-"},
-{"day":"יום 4","date":"16/11/2026","time":"07:30-09:00","place":"יער הבמבוק ומקדש טנריו ג'י","address":"68 Sagaogurayama Tabuchicho Ukyo Ward Kyoto Japan","phone":"","notes":"חובה להגיע מוקדם","cost":"500 יין"},
-{"day":"יום 4","date":"16/11/2026","time":"09:00-12:00","place":"מקדש גיו ג'י","address":"32 Sagatoriimoto Kozachicho Ukyo Ward Kyoto Japan","phone":"","notes":"גן טחב ירוק עם מייפל אדום שנשר","cost":"500 יין"},
-{"day":"יום 4","date":"16/11/2026","time":"09:00-12:00","place":"מקדש אדאשינו נמבוצו ג'י","address":"Adashino Nenbutsu ji Ukyo Ward Kyoto Japan","phone":"","notes":"אלפי פסלי אבן קטנים ויער במבוק שקט","cost":"500 יין"},
-{"day":"יום 4","date":"16/11/2026","time":"12:00-13:30","place":"גשר טוגצוקיו","address":"Togetsukyo Bridge Arashiyama Kyoto Japan","phone":"","notes":"ארוחת צהריים אטריות סובה או טופו על הנהר","cost":"-"},
-{"day":"יום 4","date":"16/11/2026","time":"13:30-15:30","place":"פארק הקופים אראשיימה","address":"61 Sagaichikawa Mankijicho Nishikyo Ward Kyoto Japan","phone":"","notes":"עלייה תלולה ותצפית פנורמית על קיוטו","cost":"600 יין"},
-{"day":"יום 5","date":"17/11/2026","time":"09:00-11:30","place":"פארק טירת אוסקה","address":"1-1 Osakajo Chuo Ward Osaka Japan","phone":"","notes":"עצי גינקו ומייפל סביב הטירה והחפיר","cost":"חינם"},
-{"day":"יום 5","date":"17/11/2026","time":"12:00-14:30","place":"שוק קורומון איצ'יבה","address":"2 Chome 4-1 Nippombashi Chuo Ward Osaka Japan","phone":"","notes":"שוק אוכל אגדי צדפות תמנון וסושי","cost":"-"},
-{"day":"יום 5","date":"17/11/2026","time":"12:00-14:30","place":"רחוב הסכינים דוגויאסוג'י","address":"Sennichimae Doguyasuji Shopping Street Osaka Japan","phone":"","notes":"רחוב השפים והסכינים","cost":"-"},
-{"day":"יום 5","date":"17/11/2026","time":"15:00-17:30","place":"יוניקלו שינסאיבאשי","address":"1 Chome 9-1 Shinsaibashisuji Chuo Ward Osaka Japan","phone":"","notes":"קניות ביגוד איכותי במחירי יפן","cost":"-"},
-{"day":"יום 5","date":"17/11/2026","time":"17:30-20:30","place":"רובע דוטונבורי","address":"Dotonbori Chuo Ward Osaka Japan","phone":"","notes":"שלטי ניאון תעלת מים טאקויאקי ואוקונומיאקי","cost":"-"},
-{"day":"יום 6","date":"18/11/2026","time":"09:00-11:15","place":"רכבת שינקנסן מקיוטו לטוקיו","address":"Kyoto Station Japan","phone":"","notes":"הזמינו מקומות בצד שמאל לתצפית על הר פוג'י","cost":"14000 יין"},
-{"day":"יום 6","date":"18/11/2026","time":"13:30-16:30","place":"מקדש סנסו ג'י באסאקוסה","address":"2 Chome 3-1 Asakusa Taito City Tokyo Japan","phone":"","notes":"שער קמינארימון ורחוב נאקאמיסה דורי","cost":"חינם"},
-{"day":"יום 6","date":"18/11/2026","time":"17:30-21:00","place":"שיבויה סקיי וצומת שיבויה","address":"2 Chome 24-12 Shibuya Tokyo Japan","phone":"","notes":"להזמין כרטיסים ארבעה שבועות מראש לשעת השקיעה","cost":"2200 יין"},
-{"day":"יום 6","date":"18/11/2026","time":"21:00","place":"איזקאיה בנונביי יוקוצ'ו","address":"Nonbei Yokocho Shibuya Tokyo Japan","phone":"","notes":"פאב יפני מסורתי","cost":"-"},
-{"day":"יום 7","date":"19/11/2026","time":"08:00-09:00","place":"רכבת משינג'וקו להר טאקאו","address":"Takaosanguchi Station Tokyo Japan","phone":"","notes":"נסיעה לתחילת הטרק","cost":"400 יין"},
-{"day":"יום 7","date":"19/11/2026","time":"09:00-14:00","place":"טרק הר טאקאו מסלול שש","address":"Mount Takao Hachioji Tokyo Japan","phone":"","notes":"מסלול לאורך נחל ומדרגות עץ עד מקדש יאקואין והפסגה","cost":"חינם"},
-{"day":"יום 7","date":"19/11/2026","time":"15:00-16:30","place":"אונסן קיאו טאקאוסאן גוקוראקויו","address":"Keio Takaosan Onsen Gokurakuyu Hachioji Tokyo Japan","phone":"","notes":"מעיינות חמים ליד התחנה אין כניסה עם קעקועים","cost":"1000 יין"},
-{"day":"יום 8","date":"20/11/2026","time":"08:30-10:30","place":"מקדש מייג'י ופארק יויוגי","address":"1-1 Yoyogikamizonocho Shibuya City Tokyo Japan","phone":"","notes":"יער עירוני שלו לעיתים תהלוכות חתונה","cost":"חינם"},
-{"day":"יום 8","date":"20/11/2026","time":"10:30-13:00","place":"רחוב טקשיטה ושדרת אומוטסנדו","address":"Takeshita Street Harajuku Tokyo Japan","phone":"","notes":"אופנת רחוב וסמטאות בוטיק נסתרות","cost":"-"},
-{"day":"יום 8","date":"20/11/2026","time":"13:30-15:30","place":"פארק שינג'וקו גיואן","address":"11 Naitomachi Shinjuku City Tokyo Japan","phone":"","notes":"שדרת גינקו ומייפלים חובה בתקופת השלכת","cost":"500 יין"},
-{"day":"יום 8","date":"20/11/2026","time":"16:00-21:00","place":"אומוידה יוקוצ'ו וקאבוקיצ'ו","address":"Omoide Yokocho Shinjuku Tokyo Japan","phone":"","notes":"יקיטורי בסמטאות צרות ותצפית מבניין העירייה","cost":"-"},
-{"day":"יום 9","date":"21/11/2026","time":"09:15-12:00","place":"מקדש קנצ'ו ג'י וטרק לבודהה הגדול","address":"Kencho ji Temple Kamakura Japan","phone":"","notes":"טרק שלושה קילומטר בין מקדשי זן","cost":"500 יין"},
-{"day":"יום 9","date":"21/11/2026","time":"12:00-13:00","place":"הבודהה הגדול קוטוקו אין","address":"4 Chome 2-28 Hase Kamakura Japan","phone":"","notes":"פסל הברונזה האיקוני מהמאה השלוש עשרה","cost":"-"},
-{"day":"יום 9","date":"21/11/2026","time":"13:00-14:30","place":"מקדש האסה דרה","address":"3 Chome 11-2 Hase Kamakura Japan","phone":"","notes":"גנים מרהיבים ותצפית על מפרץ סגמי","cost":"-"},
-{"day":"יום 9","date":"21/11/2026","time":"15:00-17:00","place":"רחוב קומאצ'י ומקדש צורוגאוקה","address":"Komachi dori Kamakura Japan","phone":"","notes":"רחוב אוכל ומקדש שינטו גדול","cost":"-"},
-{"day":"יום 10","date":"22/11/2026","time":"08:30-11:00","place":"שוק הדגים החיצוני טסוקיג'י","address":"4 Chome Fukuzumi Chuo City Tokyo Japan","phone":"","notes":"אוכל רחוב ימי תמנון חביתה וסושי טרי","cost":"חינם"},
-{"day":"יום 10","date":"22/11/2026","time":"11:30-13:30","place":"מוזיאון טימלאב פלאנטס","address":"6 Chome 1-16 Toyosu Koto City Tokyo Japan","phone":"","notes":"חובה להזמין כרטיסים חודש מראש","cost":"3800 יין"},
-{"day":"יום 10","date":"22/11/2026","time":"14:30-17:30","place":"אקיהברה וחנות יודובאשי קמרה","address":"1-1 Kanda Hanaokacho Chiyoda City Tokyo Japan","phone":"","notes":"אלקטרוניקה אנימה ומשחקי רטרו","cost":"-"},
-{"day":"יום 10","date":"22/11/2026","time":"18:30","place":"ערב ברובע גינזה","address":"Ginza Chuo City Tokyo Japan","phone":"","notes":"ארוחת ערב חגיגית סושי או וואגיו","cost":"-"},
-{"day":"יום 11","date":"23/11/2026","time":"07:30-09:15","place":"נסיעה לתחנת אוקוטאמה","address":"Okutama Station Tokyo Japan","phone":"","notes":"החלפת רכבת בתחנת אומה","cost":"1200 יין"},
-{"day":"יום 11","date":"23/11/2026","time":"09:30-14:30","place":"טרק עמק מוקאשימיצ'י באוקוטאמה","address":"Okutama Tokyo Japan","phone":"","notes":"תשעה קילומטר גשרי חבלים תלויים וכפרים נסתרים","cost":"-"},
-{"day":"יום 11","date":"23/11/2026","time":"14:30-15:30","place":"אגם אוקוטאמה","address":"Lake Okutama Tokyo Japan","phone":"","notes":"מנוחה וארוחת אודון או סובה","cost":"-"},
-{"day":"יום 11","date":"23/11/2026","time":"19:30","place":"ארוחת ערב יקיניקו","address":"Tokyo Japan","phone":"","notes":"ארוחת בשר חגיגית לסיום הטרק הארוך","cost":"-"},
-{"day":"יום 12","date":"24/11/2026","time":"09:00-10:30","place":"שדרת הגינקו במייג'י גאיין","address":"1-1 Kasumigaokacho Shinjuku City Tokyo Japan","phone":"","notes":"מנהרת גינקו זהובה חובה בתקופת השלכת","cost":"חינם"},
-{"day":"יום 12","date":"24/11/2026","time":"11:00-14:00","place":"רובע הסכינים קאפבאשי","address":"Kappabashi Tokyo Japan","phone":"","notes":"חנויות סכיני שף בעבודת יד ודגמי אוכל מפלסטיק","cost":"-"},
-{"day":"יום 12","date":"24/11/2026","time":"14:30-18:00","place":"יוניקלו גינזה וג'ינזה סיקס","address":"6 Chome 9-5 Ginza Chuo City Tokyo Japan","phone":"","notes":"חנות הדגל הגדולה בעולם וגן גג","cost":"-"},
-{"day":"יום 12","date":"24/11/2026","time":"19:00","place":"ארוחת פרידה קאיסקי או אומקאסה","address":"Tokyo Japan","phone":"","notes":"מומלץ להזמין מסעדה מראש","cost":"-"},
-{"day":"יום 13","date":"25/11/2026","time":"11:30-14:30","place":"האי המלאכותי אודאיבה","address":"Daiba Minato City Tokyo Japan","phone":"","notes":"גשר הקשת רובוט גנדאם ותצפית על קו הרקיע","cost":"-"},
-{"day":"יום 13","date":"25/11/2026","time":"15:00-17:30","place":"שוק אמיצ'ו באואנו","address":"Ueno Taito City Tokyo Japan","phone":"","notes":"קניות אחרונות ממתקים ובגדים זולים","cost":"-"},
-{"day":"יום 13","date":"25/11/2026","time":"18:30-19:30","place":"נסיעה לשדה התעופה","address":"Narita or Haneda Airport Japan","phone":"","notes":"סקייליינר מאואנו או מונורייל מהאמאמאצוצ'ו","cost":"-"},
-{"day":"יום 13","date":"25/11/2026","time":"22:00","place":"טיסה חזרה לישראל","address":"Narita or Haneda Airport Japan","phone":"","notes":"סוף הטיול","cost":"-"}
+{"day":"יום 1","date":"13/11/2026","time":"18:00-19:30","place":"שדה התעופה קנסאי","address":"Kansai International Airport Japan","notes":"נחיתה הגירה כבודה הפעלת eSIM החלפת כסף","cost":"-"},
+{"day":"יום 1","date":"13/11/2026","time":"19:30-20:50","place":"רכבת הארוקה לתחנת קיוטו","address":"Kyoto Station Japan","notes":"רכבת מהירה לקיוטו הזמנה מראש מומלצת","cost":"-"},
+{"day":"יום 1","date":"13/11/2026","time":"21:00","place":"צ'ק אין במלון וראמן","address":"Kyoto Station Japan","notes":"ראמן חם בערב ההגעה","cost":"-"},
+{"day":"יום 2","date":"14/11/2026","time":"07:00-09:00","place":"מקדש פושימי אינארי","address":"68 Fukusa Yabunouchicho Fushimi Ward Kyoto Japan","notes":"מומלץ מוקדם להימנע מתיירים עלייה לפסגת ההר בין שערי טוריי","cost":"חינם"},
+{"day":"יום 2","date":"14/11/2026","time":"09:30-13:00","place":"מקדש טופוקו ג'י","address":"15 Chome 778 Honmachi Higashiyama Ward Kyoto Japan","notes":"הגשר המפורסם וגנים יער אחורי","cost":"1000 יין"},
+{"day":"יום 2","date":"14/11/2026","time":"13:30-15:30","place":"שוק נישיקי","address":"Nishiki Market Nakagyo Ward Kyoto Japan","notes":"שוק אוכל וואגיו פירות ים חמוצים","cost":"חופשי"},
+{"day":"יום 2","date":"14/11/2026","time":"16:30-19:30","place":"מקדש קיומיזו דרה בלילה","address":"1 Chome 294 Kiyomizu Higashiyama Ward Kyoto Japan","notes":"רחובות היסטוריים ותאורת לילה על השלכת","cost":"400 יין"},
+{"day":"יום 3","date":"15/11/2026","time":"08:30-09:30","place":"רכבת מדמאצ'יאנגי לקוראמה","address":"Demachiyanagi Station Kyoto Japan","notes":"נסיעה לתחילת הטרק","cost":"1500 יין"},
+{"day":"יום 3","date":"15/11/2026","time":"09:30-13:00","place":"טרק מקוראמה לקיבונה","address":"Kurama dera Sakyo Ward Kyoto Japan","notes":"טרק כארבע וחצי קילומטר דרך יער ארזים ושורשי עצים","cost":"-"},
+{"day":"יום 3","date":"15/11/2026","time":"13:00-15:00","place":"מקדש קיבונה וכפר קיבונה","address":"180 Kuramakibunacho Sakyo Ward Kyoto Japan","notes":"מדרגות עם פנסי עץ אדומים וארוחת צהריים בכפר","cost":"חינם"},
+{"day":"יום 3","date":"15/11/2026","time":"18:00","place":"סמטת פונטוצ'ו","address":"Pontocho Kyoto Japan","notes":"ערב מסעדות וסאקה על הנהר","cost":"-"},
+{"day":"יום 4","date":"16/11/2026","time":"07:30-09:00","place":"יער הבמבוק ומקדש טנריו ג'י","address":"68 Sagaogurayama Tabuchicho Ukyo Ward Kyoto Japan","notes":"חובה להגיע מוקדם","cost":"500 יין"},
+{"day":"יום 4","date":"16/11/2026","time":"09:00-12:00","place":"מקדש גיו ג'י","address":"32 Sagatoriimoto Kozachicho Ukyo Ward Kyoto Japan","notes":"גן טחב ירוק עם מייפל אדום שנשר","cost":"500 יין"},
+{"day":"יום 4","date":"16/11/2026","time":"09:00-12:00","place":"מקדש אדאשינו נמבוצו ג'י","address":"Adashino Nenbutsu ji Ukyo Ward Kyoto Japan","notes":"אלפי פסלי אבן קטנים ויער במבוק שקט","cost":"500 יין"},
+{"day":"יום 4","date":"16/11/2026","time":"12:00-13:30","place":"גשר טוגצוקיו","address":"Togetsukyo Bridge Arashiyama Kyoto Japan","notes":"ארוחת צהריים אטריות סובה או טופו על הנהר","cost":"-"},
+{"day":"יום 4","date":"16/11/2026","time":"13:30-15:30","place":"פארק הקופים אראשיימה","address":"61 Sagaichikawa Mankijicho Nishikyo Ward Kyoto Japan","notes":"עלייה תלולה ותצפית פנורמית על קיוטו","cost":"600 יין"},
+{"day":"יום 5","date":"17/11/2026","time":"09:00-11:30","place":"פארק טירת אוסקה","address":"1-1 Osakajo Chuo Ward Osaka Japan","notes":"עצי גינקו ומייפל סביב הטירה והחפיר","cost":"חינם"},
+{"day":"יום 5","date":"17/11/2026","time":"12:00-14:30","place":"שוק קורומון איצ'יבה","address":"2 Chome 4-1 Nippombashi Chuo Ward Osaka Japan","notes":"שוק אוכל אגדי צדפות תמנון וסושי","cost":"-"},
+{"day":"יום 5","date":"17/11/2026","time":"12:00-14:30","place":"רחוב הסכינים דוגויאסוג'י","address":"Sennichimae Doguyasuji Shopping Street Osaka Japan","notes":"רחוב השפים והסכינים","cost":"-"},
+{"day":"יום 5","date":"17/11/2026","time":"15:00-17:30","place":"יוניקלו שינסאיבאשי","address":"1 Chome 9-1 Shinsaibashisuji Chuo Ward Osaka Japan","notes":"קניות ביגוד איכותי במחירי יפן","cost":"-"},
+{"day":"יום 5","date":"17/11/2026","time":"17:30-20:30","place":"רובע דוטונבורי","address":"Dotonbori Chuo Ward Osaka Japan","notes":"שלטי ניאון תעלת מים טאקויאקי ואוקונומיאקי","cost":"-"},
+{"day":"יום 6","date":"18/11/2026","time":"09:00-11:15","place":"רכבת שינקנסן מקיוטו לטוקיו","address":"Kyoto Station Japan","notes":"הזמינו מקומות בצד שמאל לתצפית על הר פוג'י","cost":"14000 יין"},
+{"day":"יום 6","date":"18/11/2026","time":"13:30-16:30","place":"מקדש סנסו ג'י באסאקוסה","address":"2 Chome 3-1 Asakusa Taito City Tokyo Japan","notes":"שער קמינארימון ורחוב נאקאמיסה דורי","cost":"חינם"},
+{"day":"יום 6","date":"18/11/2026","time":"17:30-21:00","place":"שיבויה סקיי וצומת שיבויה","address":"2 Chome 24-12 Shibuya Tokyo Japan","notes":"להזמין כרטיסים ארבעה שבועות מראש לשעת השקיעה","cost":"2200 יין"},
+{"day":"יום 6","date":"18/11/2026","time":"21:00","place":"איזקאיה בנונביי יוקוצ'ו","address":"Nonbei Yokocho Shibuya Tokyo Japan","notes":"פאב יפני מסורתי","cost":"-"},
+{"day":"יום 7","date":"19/11/2026","time":"08:00-09:00","place":"רכבת משינג'וקו להר טאקאו","address":"Takaosanguchi Station Tokyo Japan","notes":"נסיעה לתחילת הטרק","cost":"400 יין"},
+{"day":"יום 7","date":"19/11/2026","time":"09:00-14:00","place":"טרק הר טאקאו מסלול שש","address":"Mount Takao Hachioji Tokyo Japan","notes":"מסלול לאורך נחל ומדרגות עץ עד מקדש יאקואין והפסגה","cost":"חינם"},
+{"day":"יום 7","date":"19/11/2026","time":"15:00-16:30","place":"אונסן קיאו טאקאוסאן גוקוראקויו","address":"Keio Takaosan Onsen Gokurakuyu Hachioji Tokyo Japan","notes":"מעיינות חמים ליד התחנה אין כניסה עם קעקועים","cost":"1000 יין"},
+{"day":"יום 8","date":"20/11/2026","time":"08:30-10:30","place":"מקדש מייג'י ופארק יויוגי","address":"1-1 Yoyogikamizonocho Shibuya City Tokyo Japan","notes":"יער עירוני שלו לעיתים תהלוכות חתונה","cost":"חינם"},
+{"day":"יום 8","date":"20/11/2026","time":"10:30-13:00","place":"רחוב טקשיטה ושדרת אומוטסנדו","address":"Takeshita Street Harajuku Tokyo Japan","notes":"אופנת רחוב וסמטאות בוטיק נסתרות","cost":"-"},
+{"day":"יום 8","date":"20/11/2026","time":"13:30-15:30","place":"פארק שינג'וקו גיואן","address":"11 Naitomachi Shinjuku City Tokyo Japan","notes":"שדרת גינקו ומייפלים חובה בתקופת השלכת","cost":"500 יין"},
+{"day":"יום 8","date":"20/11/2026","time":"16:00-21:00","place":"אומוידה יוקוצ'ו וקאבוקיצ'ו","address":"Omoide Yokocho Shinjuku Tokyo Japan","notes":"יקיטורי בסמטאות צרות ותצפית מבניין העירייה","cost":"-"},
+{"day":"יום 9","date":"21/11/2026","time":"09:15-12:00","place":"מקדש קנצ'ו ג'י וטרק לבודהה הגדול","address":"Kencho ji Temple Kamakura Japan","notes":"טרק שלושה קילומטר בין מקדשי זן","cost":"500 יין"},
+{"day":"יום 9","date":"21/11/2026","time":"12:00-13:00","place":"הבודהה הגדול קוטוקו אין","address":"4 Chome 2-28 Hase Kamakura Japan","notes":"פסל הברונזה האיקוני מהמאה השלוש עשרה","cost":"-"},
+{"day":"יום 9","date":"21/11/2026","time":"13:00-14:30","place":"מקדש האסה דרה","address":"3 Chome 11-2 Hase Kamakura Japan","notes":"גנים מרהיבים ותצפית על מפרץ סגמי","cost":"-"},
+{"day":"יום 9","date":"21/11/2026","time":"15:00-17:00","place":"רחוב קומאצ'י ומקדש צורוגאוקה","address":"Komachi dori Kamakura Japan","notes":"רחוב אוכל ומקדש שינטו גדול","cost":"-"},
+{"day":"יום 10","date":"22/11/2026","time":"08:30-11:00","place":"שוק הדגים החיצוני טסוקיג'י","address":"4 Chome Fukuzumi Chuo City Tokyo Japan","notes":"אוכל רחוב ימי תמנון חביתה וסושי טרי","cost":"חינם"},
+{"day":"יום 10","date":"22/11/2026","time":"11:30-13:30","place":"מוזיאון טימלאב פלאנטס","address":"6 Chome 1-16 Toyosu Koto City Tokyo Japan","notes":"חובה להזמין כרטיסים חודש מראש","cost":"3800 יין"},
+{"day":"יום 10","date":"22/11/2026","time":"14:30-17:30","place":"אקיהברה וחנות יודובאשי קמרה","address":"1-1 Kanda Hanaokacho Chiyoda City Tokyo Japan","notes":"אלקטרוניקה אנימה ומשחקי רטרו","cost":"-"},
+{"day":"יום 10","date":"22/11/2026","time":"18:30","place":"ערב ברובע גינזה","address":"Ginza Chuo City Tokyo Japan","notes":"ארוחת ערב חגיגית סושי או וואגיו","cost":"-"},
+{"day":"יום 11","date":"23/11/2026","time":"07:30-09:15","place":"נסיעה לתחנת אוקוטאמה","address":"Okutama Station Tokyo Japan","notes":"החלפת רכבת בתחנת אומה","cost":"1200 יין"},
+{"day":"יום 11","date":"23/11/2026","time":"09:30-14:30","place":"טרק עמק מוקאשימיצ'י באוקוטאמה","address":"Okutama Tokyo Japan","notes":"תשעה קילומטר גשרי חבלים תלויים וכפרים נסתרים","cost":"-"},
+{"day":"יום 11","date":"23/11/2026","time":"14:30-15:30","place":"אגם אוקוטאמה","address":"Lake Okutama Tokyo Japan","notes":"מנוחה וארוחת אודון או סובה","cost":"-"},
+{"day":"יום 11","date":"23/11/2026","time":"19:30","place":"ארוחת ערב יקיניקו","address":"Tokyo Japan","notes":"ארוחת בשר חגיגית לסיום הטרק הארוך","cost":"-"},
+{"day":"יום 12","date":"24/11/2026","time":"09:00-10:30","place":"שדרת הגינקו במייג'י גאיין","address":"1-1 Kasumigaokacho Shinjuku City Tokyo Japan","notes":"מנהרת גינקו זהובה חובה בתקופת השלכת","cost":"חינם"},
+{"day":"יום 12","date":"24/11/2026","time":"11:00-14:00","place":"רובע הסכינים קאפבאשי","address":"Kappabashi Tokyo Japan","notes":"חנויות סכיני שף בעבודת יד ודגמי אוכל מפלסטיק","cost":"-"},
+{"day":"יום 12","date":"24/11/2026","time":"14:30-18:00","place":"יוניקלו גינזה וג'ינזה סיקס","address":"6 Chome 9-5 Ginza Chuo City Tokyo Japan","notes":"חנות הדגל הגדולה בעולם וגן גג","cost":"-"},
+{"day":"יום 12","date":"24/11/2026","time":"19:00","place":"ארוחת פרידה קאיסקי או אומקאסה","address":"Tokyo Japan","notes":"מומלץ להזמין מסעדה מראש","cost":"-"},
+{"day":"יום 13","date":"25/11/2026","time":"11:30-14:30","place":"האי המלאכותי אודאיבה","address":"Daiba Minato City Tokyo Japan","notes":"גשר הקשת רובוט גנדאם ותצפית על קו הרקיע","cost":"-"},
+{"day":"יום 13","date":"25/11/2026","time":"15:00-17:30","place":"שוק אמיצ'ו באואנו","address":"Ueno Taito City Tokyo Japan","notes":"קניות אחרונות ממתקים ובגדים זולים","cost":"-"},
+{"day":"יום 13","date":"25/11/2026","time":"18:30-19:30","place":"נסיעה לשדה התעופה","address":"Narita or Haneda Airport Japan","notes":"סקייליינר מאואנו או מונורייל מהאמאמאצוצ'ו","cost":"-"},
+{"day":"יום 13","date":"25/11/2026","time":"22:00","place":"טיסה חזרה לישראל","address":"Narita or Haneda Airport Japan","notes":"סוף הטיול","cost":"-"}
 ];
 
 let data = [];
-let nextId = 1;
 
-function loadData(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(raw){
-    try{ data = JSON.parse(raw); }catch(e){ data = clone(DEFAULT_DATA); }
-  } else {
-    data = clone(DEFAULT_DATA);
+async function ensureSeeded(){
+  const snap = await getDocs(pointsRef);
+  if(snap.empty){
+    const batch = writeBatch(db);
+    DEFAULT_DATA.forEach(item=>{
+      const ref = doc(pointsRef);
+      batch.set(ref, {...item, done:false, mapLink:"", photoUrl:"", desc:""});
+    });
+    await batch.commit();
   }
-  data.forEach(d=>{ if(!d.id) d.id = nextId++; if(d.id>=nextId) nextId=d.id+1; if(d.done===undefined) d.done=false; });
-  saveData();
 }
-function clone(o){ return JSON.parse(JSON.stringify(o)); }
-function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
-function mapsUrl(address){
-  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address);
+function mapsUrl(item){
+  if(item.mapLink && item.mapLink.trim()) return item.mapLink.trim();
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.address||'');
 }
 function telUrl(phone){
   return 'tel:' + phone.replace(/[^0-9+]/g,'');
@@ -193,7 +218,7 @@ function render(){
 
   let filtered = data.filter(d=>{
     if(filterDay!=='all' && d.day!==filterDay) return false;
-    if(q && !(d.place||'').toLowerCase().includes(q) && !(d.notes||'').toLowerCase().includes(q)) return false;
+    if(q && !(d.place||'').toLowerCase().includes(q) && !(d.notes||'').toLowerCase().includes(q) && !(d.desc||'').toLowerCase().includes(q)) return false;
     return true;
   });
 
@@ -233,8 +258,15 @@ function renderCard(item){
 
   const check = document.createElement('input');
   check.type='checkbox'; check.className='check'; check.checked=!!item.done;
-  check.onchange = ()=>{ item.done = check.checked; saveData(); render(); };
+  check.onchange = ()=>{ updateDoc(doc(db,'points',item.id), {done: check.checked}); };
   card.appendChild(check);
+
+  if(item.photoUrl){
+    const img = document.createElement('img');
+    img.className='card-photo'; img.src=item.photoUrl; img.loading='lazy';
+    img.onerror = ()=>{ img.style.display='none'; };
+    card.appendChild(img);
+  }
 
   const top = document.createElement('div');
   top.className='card-top';
@@ -251,6 +283,19 @@ function renderCard(item){
     const notes = document.createElement('div');
     notes.className='card-notes'; notes.textContent = item.notes;
     card.appendChild(notes);
+  }
+
+  if(item.desc){
+    const toggle = document.createElement('button');
+    toggle.className='toggle-desc'; toggle.textContent='👁 קרא עוד';
+    const desc = document.createElement('div');
+    desc.className='card-desc'; desc.textContent = item.desc;
+    toggle.onclick = ()=>{
+      desc.classList.toggle('open');
+      toggle.textContent = desc.classList.contains('open') ? '🔼 הסתר' : '👁 קרא עוד';
+    };
+    card.appendChild(toggle);
+    card.appendChild(desc);
   }
 
   const meta = document.createElement('div');
@@ -272,12 +317,11 @@ function renderCard(item){
   const actions = document.createElement('div');
   actions.className='actions';
 
-  if(item.address){
-    const a = document.createElement('a');
-    a.href = mapsUrl(item.address); a.target='_blank'; a.className='link-map';
-    a.textContent = '🧭 ניווט בגוגל מאפ';
-    actions.appendChild(a);
-  }
+  const mapA = document.createElement('a');
+  mapA.href = mapsUrl(item); mapA.target='_blank'; mapA.className='link-map';
+  mapA.textContent = '🧭 ניווט בגוגל מאפ';
+  actions.appendChild(mapA);
+
   if(item.phone){
     const a = document.createElement('a');
     a.href = telUrl(item.phone); a.className='link-call';
@@ -293,8 +337,7 @@ function renderCard(item){
   delBtn.className='link-del'; delBtn.textContent='🗑 מחיקה';
   delBtn.onclick = ()=>{
     if(confirm('למחוק את "'+item.place+'"?')){
-      data = data.filter(d=>d.id!==item.id);
-      saveData(); render();
+      deleteDoc(doc(db,'points',item.id));
     }
   };
   actions.appendChild(delBtn);
@@ -306,7 +349,7 @@ function renderCard(item){
 function updateStats(){
   const total = data.length;
   const done = data.filter(d=>d.done).length;
-  document.getElementById('stats').textContent = `${done} מתוך ${total} נקודות עניין הושלמו`;
+  document.getElementById('stats').innerHTML = `<span id="syncBadge" class="sync-badge sync-ok">🔄 מסונכרן</span> ${done} מתוך ${total} נקודות עניין הושלמו`;
 }
 
 function openModal(item){
@@ -317,20 +360,29 @@ function openModal(item){
   document.getElementById('f_time').value = item ? item.time : '';
   document.getElementById('f_place').value = item ? item.place : '';
   document.getElementById('f_address').value = item ? item.address : '';
-  document.getElementById('f_phone').value = item ? item.phone : '';
-  document.getElementById('f_notes').value = item ? item.notes : '';
+  document.getElementById('f_maplink').value = item ? (item.mapLink||'') : '';
+  document.getElementById('f_photo').value = item ? (item.photoUrl||'') : '';
+  document.getElementById('f_phone').value = item ? item.phone||'' : '';
+  document.getElementById('f_notes').value = item ? item.notes||'' : '';
+  document.getElementById('f_desc').value = item ? (item.desc||'') : '';
   document.getElementById('f_cost').value = item ? item.cost : '';
+  previewImg();
   document.getElementById('modalBackdrop').classList.add('open');
 }
 function closeModal(){
   document.getElementById('modalBackdrop').classList.remove('open');
 }
+window.previewImg = function(){
+  const url = document.getElementById('f_photo').value.trim();
+  const img = document.getElementById('imgPreview');
+  if(url){ img.src = url; img.style.display='block'; } else { img.style.display='none'; }
+};
 
 document.getElementById('addBtn').onclick = ()=>openModal(null);
 document.getElementById('cancelBtn').onclick = closeModal;
 document.getElementById('modalBackdrop').onclick = (e)=>{ if(e.target.id==='modalBackdrop') closeModal(); };
 
-document.getElementById('saveBtn').onclick = ()=>{
+document.getElementById('saveBtn').onclick = async ()=>{
   const id = document.getElementById('editId').value;
   const place = document.getElementById('f_place').value.trim();
   if(!place){ alert('יש להזין שם מקום'); return; }
@@ -340,48 +392,43 @@ document.getElementById('saveBtn').onclick = ()=>{
     time: document.getElementById('f_time').value.trim(),
     place: place,
     address: document.getElementById('f_address').value.trim(),
+    mapLink: document.getElementById('f_maplink').value.trim(),
+    photoUrl: document.getElementById('f_photo').value.trim(),
     phone: document.getElementById('f_phone').value.trim(),
     notes: document.getElementById('f_notes').value.trim(),
-    cost: document.getElementById('f_cost').value.trim() || '-',
-    done: false
+    desc: document.getElementById('f_desc').value.trim(),
+    cost: document.getElementById('f_cost').value.trim() || '-'
   };
   if(id){
-    const idx = data.findIndex(d=>d.id==id);
-    obj.id = data[idx].id;
-    obj.done = data[idx].done;
-    data[idx] = obj;
+    await updateDoc(doc(db,'points',id), obj);
   } else {
-    obj.id = nextId++;
-    data.push(obj);
+    obj.done = false;
+    await addDoc(pointsRef, obj);
   }
-  saveData();
   closeModal();
-  render();
 };
 
 document.getElementById('dayFilter').onchange = render;
 document.getElementById('searchBox').oninput = render;
 
-document.getElementById('exportBtn').onclick = ()=>{
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'japan_trip_data.json';
-  a.click();
-};
-
-document.getElementById('resetBtn').onclick = ()=>{
-  if(confirm('זה ימחק את כל השינויים שלך ויחזיר לנתוני הבסיס. להמשיך?')){
-    data = clone(DEFAULT_DATA);
-    nextId = 1;
-    data.forEach(d=>{ d.id = nextId++; d.done=false; });
-    saveData();
-    render();
+document.getElementById('resetBtn').onclick = async ()=>{
+  if(confirm('זה ימחק את כל הנקודות הקיימות (כולל של כולם) ויחזיר לנתוני הבסיס. להמשיך?')){
+    const snap = await getDocs(pointsRef);
+    const batch = writeBatch(db);
+    snap.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+    await ensureSeeded();
   }
 };
 
-loadData();
-render();
+onSnapshot(pointsRef, (snap)=>{
+  data = snap.docs.map(d=>({id:d.id, ...d.data()}));
+  render();
+}, (err)=>{
+  document.getElementById('stats').innerHTML = '<span class="sync-badge sync-bad">⚠ שגיאת חיבור</span> ' + err.message;
+});
+
+ensureSeeded();
 </script>
 </body>
 </html>
