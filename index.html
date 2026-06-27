@@ -90,6 +90,7 @@
     <div class="field"><label>שם המקום</label><input id="f_place" placeholder="שם המקום"></div>
     <div class="field"><label>כתובת (לניווט אוטומטי בגוגל מאפ)</label><input id="f_address" placeholder="כתובת באנגלית, למשל: Shibuya Tokyo Japan"></div>
     <div class="field"><label>קישור מפה מותאם (אופציונלי - גובר על הכתובת)</label><input id="f_maplink" placeholder="https://maps.google.com/..."></div>
+    <div class="field"><label>קישור לאתר עם הסברים (ויקיפדיה / אתר רשמי וכד')</label><input id="f_website" placeholder="https://..."></div>
     <div class="field"><label>קישור לתמונה (URL)</label><input id="f_photo" placeholder="https://...jpg" oninput="previewImg()"><img id="imgPreview" class="img-preview"></div>
     <div class="field"><label>טלפון</label><input id="f_phone" placeholder="+81-..."></div>
     <div class="field"><label>הערות קצרות</label><textarea id="f_notes" rows="2"></textarea></div>
@@ -457,6 +458,12 @@ function renderCard(item){
     a.textContent = '☎ חיוג';
     actions.appendChild(a);
   }
+  if(item.websiteUrl){
+    const a = document.createElement('a');
+    a.href = item.websiteUrl; a.target='_blank'; a.className='btn-link';
+    a.textContent = '🌐 אתר עם הסברים';
+    actions.appendChild(a);
+  }
   const editBtn = document.createElement('button');
   editBtn.className='link-edit'; editBtn.textContent='✏ עריכה';
   editBtn.onclick = ()=>openModal(item);
@@ -490,6 +497,7 @@ function openModal(item){
   document.getElementById('f_place').value = item ? item.place : '';
   document.getElementById('f_address').value = item ? item.address : '';
   document.getElementById('f_maplink').value = item ? (item.mapLink||'') : '';
+  document.getElementById('f_website').value = item ? (item.websiteUrl||'') : '';
   document.getElementById('f_photo').value = item ? (item.photoUrl||'') : '';
   document.getElementById('f_phone').value = item ? item.phone||'' : '';
   document.getElementById('f_notes').value = item ? item.notes||'' : '';
@@ -527,6 +535,7 @@ document.getElementById('saveBtn').onclick = async ()=>{
     place: place,
     address: document.getElementById('f_address').value.trim(),
     mapLink: document.getElementById('f_maplink').value.trim(),
+    websiteUrl: document.getElementById('f_website').value.trim(),
     photoUrl: document.getElementById('f_photo').value.trim(),
     phone: document.getElementById('f_phone').value.trim(),
     notes: document.getElementById('f_notes').value.trim(),
