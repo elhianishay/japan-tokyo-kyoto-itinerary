@@ -81,6 +81,7 @@
     <select id="dayFilter"><option value="all">כל הימים</option></select>
     <input id="searchBox" placeholder="חיפוש מקום..." style="flex:1;min-width:120px;">
     <button id="guideBtn" class="link-edit">📖 מדריך לוגיסטי</button>
+    <button id="dedupBtn" class="link-edit">🧹 נקה כפילויות</button>
     <button id="resetBtn" class="link-del">איפוס לנתוני בסיס</button>
   </div>
   <div class="stats" id="stats"><span id="syncBadge" class="sync-badge">מתחבר...</span></div>
@@ -623,6 +624,39 @@ document.getElementById('saveBtn').onclick = async ()=>{
 
 document.getElementById('dayFilter').onchange = render;
 document.getElementById('searchBox').oninput = render;
+
+document.getElementById('dedupBtn').onclick = async ()=>{
+  const snap = await getDocs(pointsRef);
+  const all = snap.docs.map(d=>({id:d.id, ...d.data()}));
+  const seen = {};
+  const toDelete = [];
+  all.forEach(item=>{
+    const key = (item.place||'').trim() + '|' + (item.day||'').trim() + '|' + (item.time||'').trim();
+    if(seen[key]){
+      const existing = seen[key];
+      const existingScore = Object.values(existing).filter(v=>v && v!=='-').length;
+      const newScore = Object.values(item).filter(v=>v && v!=='-').length;
+      if(newScore > existingScore){
+        toDelete.push(existing.id);
+        seen[key] = item;
+      } else {
+        toDelete.push(item.id);
+      }
+    } else {
+      seen[key] = item;
+    }
+  });
+  if(toDelete.length === 0){
+    alert('לא נמצאו כפילויות!');
+    return;
+  }
+  if(confirm(`נמצאו ${toDelete.length} כפילויות. למחוק אותן?`)){
+    const batch = writeBatch(db);
+    toDelete.forEach(id => batch.delete(doc(db,'points',id)));
+    await batch.commit();
+    alert(`✓ נמחקו ${toDelete.length} כפילויות בהצלחה`);
+  }
+};
 
 document.getElementById('resetBtn').onclick = async ()=>{
   if(confirm('זה ימחק את כל הנקודות הקיימות (כולל של כולם) ויחזיר לנתוני הבסיס. להמשיך?')){
