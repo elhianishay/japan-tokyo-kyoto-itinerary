@@ -6,13 +6,13 @@
 <title>המסלול שלי ביפן</title>
 <style>
   :root{
-    --bg:#0f1115; --card:#1a1d24; --card2:#22262f; --text:#eef0f3; --muted:#9aa3b2;
-    --accent:#e0533d; --accent2:#3d8de0; --done:#2e7d4f; --border:#2c313c;
+    --bg:#fbf7ee; --card:#ffffff; --card2:#f3ead4; --text:#2c2620; --muted:#7a6f5e;
+    --accent:#b23a2e; --accent2:#2c537a; --done:#33502a; --border:#ecdfc2;
   }
   *{box-sizing:border-box;}
   body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);padding-bottom:80px;}
-  header{padding:16px;background:var(--card);position:sticky;top:0;z-index:10;border-bottom:1px solid var(--border);}
-  header h1{margin:0 0 8px;font-size:20px;}
+  header{padding:16px;background:var(--card2);position:sticky;top:0;z-index:10;border-bottom:1px solid var(--border);}
+  header h1{margin:0 0 8px;font-size:20px;color:#3a2e1c;}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
   select,input,button,textarea{background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit;}
   button{cursor:pointer;}
@@ -22,7 +22,7 @@
   .day-group{margin-bottom:18px;}
   .day-title{font-size:16px;font-weight:700;color:var(--accent);margin:14px 0 6px;padding-right:4px;}
   .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;position:relative;overflow:hidden;}
-  .card.done{opacity:0.55;}
+  .card.done{opacity:0.6;}
   .card-photo{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block;background:var(--card2);}
   .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
   .card-time{color:var(--accent2);font-weight:700;font-size:13px;white-space:nowrap;}
@@ -35,10 +35,10 @@
   .pill{font-size:12px;padding:3px 8px;border-radius:20px;background:var(--card2);color:var(--muted);}
   .actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
   .actions a, .actions button{text-decoration:none;font-size:13px;padding:6px 10px;border-radius:8px;}
-  .link-map{background:#1e3a5f;color:#9cc4ff;border:1px solid #2c4f7c;}
-  .link-call{background:#1e4a2c;color:#9cf0b0;border:1px solid #2c6f3c;}
+  .link-map{background:#e6eef7;color:#2c537a;border:1px solid #c7dbef;}
+  .link-call{background:#e3f0dc;color:#33502a;border:1px solid #c5e0b8;}
   .link-edit{background:var(--card2);color:var(--text);border:1px solid var(--border);}
-  .link-del{background:#3a1e1e;color:#ff9c9c;border:1px solid #6f2c2c;}
+  .link-del{background:#fbe6e2;color:#8a2f24;border:1px solid #f0c4ba;}
   .check{position:absolute;left:12px;top:12px;width:20px;height:20px;z-index:2;}
   .fab{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;border:none;border-radius:30px;padding:14px 26px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,0.4);}
   .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:50;align-items:center;justify-content:center;}
@@ -52,8 +52,8 @@
   .empty-msg{color:var(--muted);text-align:center;margin-top:40px;font-size:14px;}
   .stats{font-size:12px;color:var(--muted);margin-top:4px;}
   .sync-badge{font-size:11px;padding:2px 8px;border-radius:10px;margin-right:6px;}
-  .sync-ok{background:#1e4a2c;color:#9cf0b0;}
-  .sync-bad{background:#3a1e1e;color:#ff9c9c;}
+  .sync-ok{background:#e3f0dc;color:#33502a;}
+  .sync-bad{background:#fbe6e2;color:#8a2f24;}
   .img-preview{max-width:100%;max-height:120px;border-radius:8px;margin-top:4px;display:none;}
   .guide-modal .modal{max-width:600px;}
   .guide-section{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;}
