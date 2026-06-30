@@ -152,9 +152,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {
-  getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-f_jx1-kRQGa_uvvLctRyTpTPVxspS0Q",
@@ -173,7 +170,6 @@ if('serviceWorker' in navigator){
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 const pointsRef = collection(db, "points");
 const guideRef = collection(db, "guide");
 
@@ -186,27 +182,41 @@ function driveUrlToImg(url){
   return url;
 }
 
+function resizeImageToBase64(file, maxPx=400, quality=0.75){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 document.getElementById('f_photo_file').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
   const status = document.getElementById('uploadStatus');
-  status.textContent = 'מעלה...';
-  const path = `points/${Date.now()}_${file.name}`;
-  const ref = storageRef(storage, path);
-  const task = uploadBytesResumable(ref, file);
-  task.on('state_changed',
-    (snap)=>{
-      const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
-      status.textContent = `מעלה... ${pct}%`;
-    },
-    (err)=>{ status.textContent = '⚠ שגיאת העלאה: ' + err.message; },
-    async ()=>{
-      const url = await getDownloadURL(task.snapshot.ref);
-      document.getElementById('f_photo').value = url;
-      status.textContent = '✓ הועלה בהצלחה';
-      previewImg();
-    }
-  );
+  status.textContent = 'מכין תמונה...';
+  try {
+    const base64 = await resizeImageToBase64(file);
+    document.getElementById('f_photo').value = base64;
+    status.textContent = '✓ מוכן';
+    previewImg();
+  } catch(err){
+    status.textContent = '⚠ שגיאה: ' + err.message;
+  }
 });
 
 const DEFAULT_GUIDE = [
