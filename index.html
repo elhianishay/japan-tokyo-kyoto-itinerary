@@ -150,7 +150,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, writeBatch
+  getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, writeBatch, setDoc, getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -359,15 +359,16 @@ const DEFAULT_DATA = [
 let data = [];
 
 async function ensureSeeded(){
-  const snap = await getDocs(pointsRef);
-  if(snap.empty){
-    const batch = writeBatch(db);
-    DEFAULT_DATA.forEach(item=>{
-      const ref = doc(pointsRef);
-      batch.set(ref, {...item, done:false, mapLink:"", photoUrl:"", desc:""});
-    });
-    await batch.commit();
-  }
+  const metaRef = doc(db, '_meta', 'seeded');
+  const metaSnap = await getDoc(metaRef);
+  if(metaSnap.exists()) return;
+  await setDoc(metaRef, {at: Date.now()});
+  const batch = writeBatch(db);
+  DEFAULT_DATA.forEach(item=>{
+    const ref = doc(pointsRef);
+    batch.set(ref, {...item, done:false, mapLink:"", photoUrl:"", desc:""});
+  });
+  await batch.commit();
 }
 
 function mapsUrl(item){
