@@ -32,9 +32,11 @@
   .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:10px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(60,46,20,0.06);}
   .card.done{opacity:0.6;}
   .card-photo{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block;background:var(--card2);}
+  .card-thumb{width:44px;height:44px;object-fit:cover;border-radius:8px;flex-shrink:0;background:var(--card2);}
   .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
   .card-time{color:var(--accent2);font-weight:700;font-size:13px;white-space:nowrap;}
-  .card-name{font-size:16px;font-weight:700;margin:2px 0 4px;}
+  .card-name-row{display:flex;align-items:center;gap:10px;margin:2px 0 4px;}
+  .card-name{font-size:16px;font-weight:700;margin:0;}
   .card-notes{color:var(--muted);font-size:13px;margin:4px 0;}
   .card-desc{color:var(--text);font-size:13px;margin:8px 0;line-height:1.5;background:var(--card2);border-radius:8px;padding:10px;display:none;}
   .card-desc.open{display:block;}
@@ -405,13 +407,6 @@ function renderCard(item){
   check.onchange = ()=>{ updateDoc(doc(db,'points',item.id), {done: check.checked}); };
   card.appendChild(check);
 
-  if(item.photoUrl){
-    const img = document.createElement('img');
-    img.className='card-photo'; img.src=item.photoUrl; img.loading='lazy';
-    img.onerror = ()=>{ img.style.display='none'; };
-    card.appendChild(img);
-  }
-
   const top = document.createElement('div');
   top.className='card-top';
   const timeEl = document.createElement('div');
@@ -419,9 +414,18 @@ function renderCard(item){
   top.appendChild(timeEl);
   card.appendChild(top);
 
+  const nameRow = document.createElement('div');
+  nameRow.className='card-name-row';
+  if(item.photoUrl){
+    const thumb = document.createElement('img');
+    thumb.className='card-thumb'; thumb.src=item.photoUrl; thumb.loading='lazy';
+    thumb.onerror = ()=>{ thumb.style.display='none'; };
+    nameRow.appendChild(thumb);
+  }
   const name = document.createElement('div');
   name.className='card-name'; name.textContent = item.place;
-  card.appendChild(name);
+  nameRow.appendChild(name);
+  card.appendChild(nameRow);
 
   if(item.notes){
     const notes = document.createElement('div');
