@@ -2,17 +2,25 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>המסלול שלי ביפן</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#b23a2e">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="טיול יפן">
 <style>
   :root{
     --bg:#fbf7ee; --card:#ffffff; --card2:#f3ead4; --text:#2c2620; --muted:#7a6f5e;
     --accent:#b23a2e; --accent2:#2c537a; --done:#33502a; --border:#ecdfc2;
   }
-  *{box-sizing:border-box;}
-  body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);padding-bottom:80px;}
-  header{padding:16px;background:var(--card2);position:sticky;top:0;z-index:10;border-bottom:1px solid var(--border);}
-  header h1{margin:0 0 8px;font-size:20px;color:#3a2e1c;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html{overscroll-behavior-y:none;}
+  body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);padding-bottom:calc(80px + env(safe-area-inset-bottom));overscroll-behavior-y:none;}
+  header{padding:calc(12px + env(safe-area-inset-top)) 16px 14px;background:var(--card2);position:sticky;top:0;z-index:10;border-bottom:1px solid var(--border);border-radius:0 0 18px 18px;}
+  header h1{margin:0 0 8px;font-size:19px;color:#3a2e1c;}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
   select,input,button,textarea{background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit;}
   button{cursor:pointer;}
@@ -21,7 +29,7 @@
   main{padding:12px;max-width:760px;margin:0 auto;}
   .day-group{margin-bottom:18px;}
   .day-title{font-size:16px;font-weight:700;color:var(--accent);margin:14px 0 6px;padding-right:4px;}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;position:relative;overflow:hidden;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:10px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(60,46,20,0.06);}
   .card.done{opacity:0.6;}
   .card-photo{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block;background:var(--card2);}
   .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
@@ -40,7 +48,7 @@
   .link-edit{background:var(--card2);color:var(--text);border:1px solid var(--border);}
   .link-del{background:#fbe6e2;color:#8a2f24;border:1px solid #f0c4ba;}
   .check{position:absolute;left:12px;top:12px;width:20px;height:20px;z-index:2;}
-  .fab{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;border:none;border-radius:30px;padding:14px 26px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,0.4);}
+  .fab{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;border:none;border-radius:30px;padding:14px 26px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(178,58,46,0.35);}
   .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:50;align-items:center;justify-content:center;}
   .modal-backdrop.open{display:flex;}
   .modal{background:var(--card);border-radius:12px;padding:20px;width:92%;max-width:440px;max-height:88vh;overflow-y:auto;}
@@ -142,6 +150,12 @@ const firebaseConfig = {
   messagingSenderId: "295377097765",
   appId: "1:295377097765:web:b9e11e01a8fecf62b1dbcc"
 };
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
