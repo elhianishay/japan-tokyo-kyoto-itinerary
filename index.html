@@ -101,7 +101,16 @@
     <div class="field"><label>כתובת (לניווט אוטומטי בגוגל מאפ)</label><input id="f_address" placeholder="כתובת באנגלית, למשל: Shibuya Tokyo Japan"></div>
     <div class="field"><label>קישור מפה מותאם (אופציונלי - גובר על הכתובת)</label><input id="f_maplink" placeholder="https://maps.google.com/..."></div>
     <div class="field"><label>קישור לאתר עם הסברים (ויקיפדיה / אתר רשמי וכד')</label><input id="f_website" placeholder="https://..."></div>
-    <div class="field"><label>קישור לתמונה (URL)</label><input id="f_photo" placeholder="https://...jpg" oninput="previewImg()"><img id="imgPreview" class="img-preview"></div>
+    <div class="field">
+      <label>תמונה</label>
+      <input id="f_photo" placeholder="הדבק קישור (URL או Google Drive)..." oninput="previewImg()">
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+        <label id="uploadLabel" for="f_photo_file" style="cursor:pointer;font-size:13px;padding:6px 12px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);">📷 בחר תמונה מהגלריה</label>
+        <input type="file" id="f_photo_file" accept="image/*" style="display:none">
+        <span id="uploadStatus" style="font-size:12px;color:var(--muted);"></span>
+      </div>
+      <img id="imgPreview" class="img-preview">
+    </div>
     <div class="field"><label>טלפון</label><input id="f_phone" placeholder="+81-..."></div>
     <div class="field"><label>הערות קצרות</label><textarea id="f_notes" rows="2"></textarea></div>
     <div class="field"><label>תיאור מורחב (מה יש לראות/לעשות שם)</label><textarea id="f_desc" rows="4"></textarea></div>
@@ -143,6 +152,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-f_jx1-kRQGa_uvvLctRyTpTPVxspS0Q",
@@ -161,8 +173,41 @@ if('serviceWorker' in navigator){
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 const pointsRef = collection(db, "points");
 const guideRef = collection(db, "guide");
+
+function driveUrlToImg(url){
+  if(!url) return url;
+  const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if(m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w800`;
+  const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if(m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w800`;
+  return url;
+}
+
+document.getElementById('f_photo_file').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const status = document.getElementById('uploadStatus');
+  status.textContent = 'מעלה...';
+  const path = `points/${Date.now()}_${file.name}`;
+  const ref = storageRef(storage, path);
+  const task = uploadBytesResumable(ref, file);
+  task.on('state_changed',
+    (snap)=>{
+      const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+      status.textContent = `מעלה... ${pct}%`;
+    },
+    (err)=>{ status.textContent = '⚠ שגיאת העלאה: ' + err.message; },
+    async ()=>{
+      const url = await getDownloadURL(task.snapshot.ref);
+      document.getElementById('f_photo').value = url;
+      status.textContent = '✓ הועלה בהצלחה';
+      previewImg();
+    }
+  );
+});
 
 const DEFAULT_GUIDE = [
 {order:1, title:"אפליקציות חובה להתקנה (לפני הטיסה)", content:"Google Maps: האפליקציה הטובה ביותר לניווט רגלי ובתחבורה ציבורית ביפן. מעודכנת בזמן אמת, מראה מאיזה רציף הרכבת יוצאת ובאיזה קרון כדאי לשבת.\n\nJapan Travel by NAVITIME: מאפשרת פילטור מסלולים לפי סוגי כרטיסים (קווי JR בלבד או כרטיסי סאבוויי).\n\nGoogle Translate: חובה להוריד את חבילת השפה היפנית לשימוש אופליין. תכונת המצלמה מצילת חיים לקריאת תפריטים ושילוט.\n\nSmartEX: האפליקציה הרשמית להזמנת כרטיסי שינקנסן בקו טוקיו-קיוטו-אוסקה, מאפשרת לקשר לכרטיס IC הדיגיטלי."},
@@ -528,7 +573,7 @@ function closeModal(){
   document.getElementById('modalBackdrop').classList.remove('open');
 }
 window.previewImg = function(){
-  const url = document.getElementById('f_photo').value.trim();
+  const url = driveUrlToImg(document.getElementById('f_photo').value.trim());
   const img = document.getElementById('imgPreview');
   if(url){ img.src = url; img.style.display='block'; } else { img.style.display='none'; }
 };
@@ -554,7 +599,7 @@ document.getElementById('saveBtn').onclick = async ()=>{
     address: document.getElementById('f_address').value.trim(),
     mapLink: document.getElementById('f_maplink').value.trim(),
     websiteUrl: document.getElementById('f_website').value.trim(),
-    photoUrl: document.getElementById('f_photo').value.trim(),
+    photoUrl: driveUrlToImg(document.getElementById('f_photo').value.trim()),
     phone: document.getElementById('f_phone').value.trim(),
     notes: document.getElementById('f_notes').value.trim(),
     desc: document.getElementById('f_desc').value.trim(),
