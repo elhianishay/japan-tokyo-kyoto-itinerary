@@ -507,10 +507,6 @@ function renderCard(item){
     const pill = document.createElement('span'); pill.className='pill'; pill.textContent='💴 '+item.cost;
     meta.appendChild(pill);
   }
-  if(item.address){
-    const pill = document.createElement('span'); pill.className='pill'; pill.textContent='📍 '+item.address;
-    meta.appendChild(pill);
-  }
   if(item.phone){
     const pill = document.createElement('span'); pill.className='pill'; pill.textContent='☎ '+item.phone;
     meta.appendChild(pill);
