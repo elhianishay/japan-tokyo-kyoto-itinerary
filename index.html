@@ -81,8 +81,11 @@
     <select id="dayFilter"><option value="all">כל הימים</option></select>
     <input id="searchBox" placeholder="חיפוש מקום..." style="flex:1;min-width:120px;">
     <button id="guideBtn" class="link-edit">📖 מדריך לוגיסטי</button>
-    <button id="dedupBtn" class="link-edit">🧹 נקה כפילויות</button>
-    <button id="resetBtn" class="link-del">איפוס לנתוני בסיס</button>
+    <button id="exportBtn" class="link-call">💾 גיבוי</button>
+    <label id="importLabel" for="importFile" class="link-call" style="cursor:pointer;font-size:13px;padding:6px 10px;border-radius:8px;">📂 שחזור</label>
+    <input type="file" id="importFile" accept=".json" style="display:none">
+    <button id="dedupBtn" class="link-edit">🧹 כפילויות</button>
+    <button id="resetBtn" class="link-del">איפוס</button>
   </div>
   <div class="stats" id="stats"><span id="syncBadge" class="sync-badge">מתחבר...</span></div>
 </header>
@@ -624,6 +627,47 @@ document.getElementById('saveBtn').onclick = async ()=>{
 
 document.getElementById('dayFilter').onchange = render;
 document.getElementById('searchBox').oninput = render;
+
+document.getElementById('exportBtn').onclick = async ()=>{
+  const pointsSnap = await getDocs(pointsRef);
+  const guideSnap = await getDocs(guideRef);
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    points: pointsSnap.docs.map(d=>({id:d.id, ...d.data()})),
+    guide: guideSnap.docs.map(d=>({id:d.id, ...d.data()}))
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toLocaleDateString('he-IL').replace(/\//g,'-');
+  a.href = url; a.download = `גיבוי-יפן-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+document.getElementById('importFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!confirm('שחזור יוסיף את כל הנקודות מהגיבוי מעל הנתונים הקיימים. להמשיך?')) return;
+  const text = await file.text();
+  let backup;
+  try { backup = JSON.parse(text); } catch{ alert('קובץ לא תקין'); return; }
+  if(!backup.points){ alert('קובץ גיבוי לא מזוהה'); return; }
+  const batch = writeBatch(db);
+  backup.points.forEach(item=>{
+    const {id, ...data} = item;
+    batch.set(doc(pointsRef), data);
+  });
+  if(backup.guide){
+    backup.guide.forEach(item=>{
+      const {id, ...data} = item;
+      batch.set(doc(guideRef), data);
+    });
+  }
+  await batch.commit();
+  e.target.value = '';
+  alert(`✓ שוחזרו ${backup.points.length} נקודות עניין בהצלחה`);
+});
 
 document.getElementById('dedupBtn').onclick = async ()=>{
   const snap = await getDocs(pointsRef);
