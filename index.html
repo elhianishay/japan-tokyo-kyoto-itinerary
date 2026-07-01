@@ -41,6 +41,12 @@
   .card-name{font-size:16px;font-weight:700;margin:0;}
   .card-notes{color:var(--muted);font-size:13px;margin:4px 0;}
   .wiki-summary{font-size:12px;color:var(--accent2);font-style:italic;margin:4px 0 2px;line-height:1.5;}
+  .resto-btn{background:#fff3e0;border:1px solid #e8c88a;color:#7a4f00;font-size:12px;padding:4px 10px;border-radius:20px;margin:6px 0 2px;cursor:pointer;}
+  .resto-panel{display:none;background:#fff8ef;border:1px solid #e8c88a;border-radius:10px;padding:10px 12px;margin:6px 0 4px;font-size:12px;line-height:1.7;}
+  .resto-panel.open{display:block;}
+  .resto-panel strong{color:#7a4f00;display:block;margin-top:6px;}
+  .resto-panel strong:first-child{margin-top:0;}
+  .resto-tip{color:#5a4500;background:#ffecc7;border-radius:6px;padding:4px 8px;margin-top:6px;font-style:italic;}
   .card-desc{color:var(--text);font-size:13px;margin:8px 0;line-height:1.5;background:var(--card2);border-radius:8px;padding:10px;display:none;}
   .card-desc.open{display:block;}
   .toggle-desc{background:none;border:none;color:var(--accent2);font-size:12px;padding:4px 0;text-decoration:underline;}
@@ -529,6 +535,27 @@ function renderCard(item){
     card.appendChild(wikiDiv);
   }
 
+  const restoData = RESTAURANT_TIPS[item.address||''];
+  if(restoData){
+    const restoBtn = document.createElement('button');
+    restoBtn.className='resto-btn';
+    restoBtn.textContent='🍽 מסעדות מומלצות';
+    const restoPanel = document.createElement('div');
+    restoPanel.className='resto-panel';
+    let html = `<strong style="color:#5a3d00;font-size:13px;">${restoData.title}</strong>`;
+    restoData.items.forEach(r=>{
+      html += `<strong>${r.name}</strong>${r.desc}`;
+    });
+    if(restoData.tip) html += `<div class="resto-tip">${restoData.tip}</div>`;
+    restoPanel.innerHTML = html;
+    restoBtn.onclick = ()=>{
+      restoPanel.classList.toggle('open');
+      restoBtn.textContent = restoPanel.classList.contains('open') ? '🔼 הסתר מסעדות' : '🍽 מסעדות מומלצות';
+    };
+    card.appendChild(restoBtn);
+    card.appendChild(restoPanel);
+  }
+
   if(item.desc){
     const toggle = document.createElement('button');
     toggle.className='toggle-desc'; toggle.textContent='👁 קרא עוד';
@@ -865,6 +892,41 @@ const WIKI_SUMMARIES = {
   '6 Chome 9-5 Ginza Chuo City Tokyo Japan': 'יוניקלו גינזה — חנות הדגל הגדולה בעולם עם 12 קומות, וג\'ינזה סיקס — קניון יוקרה מרשים עם גן גג ועיצוב אמנותי.',
   'Daiba Minato City Tokyo Japan': 'האי המלאכותי של טוקיו במפרץ — מרכז בידור ומסחר עם פסל גנדאם RX-0 בגובה 19.7 מ\' ונוף פנורמי לגשר הקשת ואופקי טוקיו.',
   'Ueno Taito City Tokyo Japan': 'שוק אמיצ\'ו — שוק פתוח היסטורי ליד תחנת אואינו, עם 250+ חנויות שכבר פעלו בשחור בתקופת השחזור שלאחר מלחמת העולם השנייה.',
+};
+
+const RESTAURANT_TIPS = {
+  'Pontocho Kyoto Japan': {
+    title: '🍽 מסעדות בסמטת פונטוצ\'ו',
+    items: [
+      { name: 'Pontocho Robin', desc: 'מסעדה קלאסית במבנה עץ עתיק — סושי ומנות קיוטו עונתיות ממרכיבים טריים. מתאים גם ללא מאכלי ים.' },
+      { name: 'Wagyu Ryotei Bungo Gion', desc: 'וואגיו פרימיום באווירה אינטימית ויוקרתית — בשר עם מרקם ייחודי, מהטובים בקיוטו.' },
+      { name: 'Kichi Kichi Omurice', desc: 'אומורייס אגדי — חביתה ממולאת אורז מוכנה במופע תיאטרלי ויראלי של השף. כדאי לצפות בסרטון מראש.' },
+    ],
+    tip: '✨ הסמטה מואר בפנסי נייר אדומים בערב — הגיעו אחרי 19:00 לחוויה הכי פוטוגנית.'
+  },
+  '4 Chome Fukuzumi Chuo City Tokyo Japan': {
+    title: '🍱 אוכל בשוק טסוקיג\'י',
+    items: [
+      { name: 'דוכני סושי טרי', desc: 'סלמון, טונה, דניס ולברק טריים ישר מהדייגים — סושי בוקר מהטובים בעולם. פשוט לדלג על דוכני התמנון.' },
+      { name: 'Tamagoyaki (חביתה יפנית)', desc: 'חביתה מתקתקה וחמה הנמכרת על שיפוד — מאכל רחוב קלאסי של השוק, מתאים ומומלץ.' },
+    ],
+    tip: '⏰ הגיעו לפני 9:00 — הדוכנים הטובים ביותר נגמרים מוקדם. חיתוך הטונה הגדולה הוא מופע בפני עצמו.'
+  },
+  '1-1 Kanda Hanaokacho Chiyoda City Tokyo Japan': {
+    title: '🍜 אוכל באקיהברה',
+    items: [
+      { name: 'קומת המסעדות — Yodobashi Akiba', desc: 'בראש בניין יודובאשי קמרה הענק יש מתחם אוכל עם עשרות אפשרויות — ראמן, דונבורי, קארי ועוד. נוח ומגוון.' },
+    ],
+    tip: '🎮 האזור מלא בחנויות אנימה ואלקטרוניקה — שמרו אנרגיה לאוכל אחרי הסיור בחנויות.'
+  },
+  'Dotonbori Chuo Ward Osaka Japan': {
+    title: '🥢 אוכל ברובע דוטונבורי',
+    items: [
+      { name: 'אוקונומיאקי (Okonomiyaki)', desc: 'חביתית כרוב עשירה עם בקר או עוף, מוכנה על פלנצ\'ה ענקית מול העיניים — ספיישלטי של אוסקה. לדלג על הטאקויאקי (תמנון).' },
+      { name: 'Ichiran Ramen', desc: 'רשת ראמן אגדית עם תאים אישיים — כל אחד יושב לבד מול הדלפק, ממלא טופס ומקבל ראמן מותאם אישית. חוויה ייחודית.' },
+    ],
+    tip: '🌙 הגיעו בלילה — שלטי הניאון הענקיים ותעלת המים מוארים ומרהיבים במיוחד אחרי 20:00.'
+  },
 };
 
 document.getElementById('mapBtn').onclick = openMap;
