@@ -11,6 +11,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="טיול יפן">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root{
     --bg:#fbf7ee; --card:#ffffff; --card2:#f3ead4; --text:#2c2620; --muted:#7a6f5e;
@@ -71,6 +73,12 @@
   .guide-section p{margin:0;font-size:13px;line-height:1.6;white-space:pre-wrap;color:var(--text);}
   .guide-section .actions{margin-top:8px;}
   .btn-link{background:var(--card2);color:var(--accent2);border:1px solid var(--border);font-size:13px;}
+  #mapScreen{display:none;position:fixed;inset:0;z-index:40;flex-direction:column;background:var(--bg);}
+  #mapScreen.open{display:flex;}
+  #mapEl{flex:1;width:100%;}
+  .map-header{padding:10px 14px;background:var(--card2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .map-header select{flex:1;}
+  .map-status{font-size:12px;color:var(--muted);padding:4px 14px;background:var(--bg);flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -80,6 +88,7 @@
   <div class="toolbar">
     <select id="dayFilter"><option value="all">כל הימים</option></select>
     <input id="searchBox" placeholder="חיפוש מקום..." style="flex:1;min-width:120px;">
+    <button id="mapBtn" class="link-map">🗺 מפה</button>
     <button id="guideBtn" class="link-edit">📖 מדריך לוגיסטי</button>
     <button id="exportBtn" class="link-call">💾 גיבוי</button>
     <label id="importLabel" for="importFile" class="link-call" style="cursor:pointer;font-size:13px;padding:6px 10px;border-radius:8px;">📂 שחזור</label>
@@ -91,6 +100,15 @@
 </header>
 
 <main id="main"></main>
+
+<div id="mapScreen">
+  <div class="map-header">
+    <button id="mapCloseBtn" class="link-edit" style="flex-shrink:0;">✕ חזור</button>
+    <select id="mapDayFilter"><option value="all">כל הימים</option></select>
+  </div>
+  <div class="map-status" id="mapStatus"></div>
+  <div id="mapEl"></div>
+</div>
 
 <div id="splash" style="position:fixed;inset:0;background:#fbf7ee;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.6s;">
   <div style="font-size:72px;line-height:1;">🗾</div>
@@ -720,6 +738,85 @@ document.getElementById('resetBtn').onclick = async ()=>{
     await batch.commit();
     await ensureSeeded();
   }
+};
+
+const DAY_COLORS = ['#b23a2e','#2c7ab2','#2e8b57','#8b5e2e','#6b2e8b','#2e7a8b','#8b2e6b','#5e8b2e','#2e4e8b','#8b7a2e','#2e8b7a','#8b2e2e','#4e2e8b'];
+let leafletMap = null, mapMarkers = [];
+
+function geocacheKey(addr){ return 'geo:'+addr; }
+
+async function geocode(address){
+  const key = geocacheKey(address);
+  const cached = localStorage.getItem(key);
+  if(cached) return JSON.parse(cached);
+  try{
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+      {headers:{'Accept-Language':'en','User-Agent':'japan-trip-app'}});
+    const j = await r.json();
+    if(j.length){
+      const result = {lat:parseFloat(j[0].lat), lng:parseFloat(j[0].lon)};
+      localStorage.setItem(key, JSON.stringify(result));
+      return result;
+    }
+  }catch(e){}
+  return null;
+}
+
+async function openMap(){
+  document.getElementById('mapScreen').classList.add('open');
+  const sel = document.getElementById('mapDayFilter');
+  sel.innerHTML = '<option value="all">כל הימים</option>';
+  uniqueDays().forEach(day=>{
+    const o = document.createElement('option'); o.value=day; o.textContent=day; sel.appendChild(o);
+  });
+
+  if(!leafletMap){
+    leafletMap = L.map('mapEl').setView([35.5, 136.5], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {attribution:'© OpenStreetMap contributors', maxZoom:19}).addTo(leafletMap);
+  }
+  await renderMapMarkers(sel.value);
+  sel.onchange = ()=> renderMapMarkers(sel.value);
+}
+
+async function renderMapMarkers(filterDay){
+  mapMarkers.forEach(m=>m.remove());
+  mapMarkers = [];
+  const days = uniqueDays();
+  const filtered = filterDay==='all' ? data : data.filter(d=>d.day===filterDay);
+  const status = document.getElementById('mapStatus');
+  const bounds = [];
+  let done=0;
+
+  for(const item of filtered){
+    if(!item.address) continue;
+    status.textContent = `ממפה נקודות... ${done+1}/${filtered.length}`;
+    const coords = await geocode(item.address);
+    done++;
+    if(!coords) continue;
+    const dayIdx = days.indexOf(item.day) % DAY_COLORS.length;
+    const color = DAY_COLORS[dayIdx];
+    const icon = L.divIcon({
+      className:'',
+      html:`<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4)"></div>`,
+      iconSize:[14,14], iconAnchor:[7,7]
+    });
+    const marker = L.marker([coords.lat, coords.lng], {icon})
+      .bindPopup(`<b style="font-size:14px">${item.place}</b><br><span style="color:#666;font-size:12px">${item.day}${item.time?' · '+item.time:''}</span>${item.notes?'<br><span style="font-size:12px">'+item.notes+'</span>':''}`)
+      .addTo(leafletMap);
+    mapMarkers.push(marker);
+    bounds.push([coords.lat, coords.lng]);
+    if(bounds.length===1) leafletMap.setView([coords.lat,coords.lng],13);
+    await new Promise(r=>setTimeout(r,1100));
+  }
+  if(bounds.length>1) leafletMap.fitBounds(bounds, {padding:[30,30]});
+  status.textContent = `${bounds.length} נקודות על המפה`;
+  setTimeout(()=>leafletMap.invalidateSize(),100);
+}
+
+document.getElementById('mapBtn').onclick = openMap;
+document.getElementById('mapCloseBtn').onclick = ()=>{
+  document.getElementById('mapScreen').classList.remove('open');
 };
 
 function hideSplash(){
