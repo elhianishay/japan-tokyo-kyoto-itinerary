@@ -40,6 +40,7 @@
   .card-name-row{display:flex;align-items:center;gap:10px;margin:2px 0 4px;}
   .card-name{font-size:16px;font-weight:700;margin:0;}
   .card-notes{color:var(--muted);font-size:13px;margin:4px 0;}
+  .wiki-summary{font-size:12px;color:var(--accent2);font-style:italic;margin:4px 0 2px;line-height:1.5;}
   .card-desc{color:var(--text);font-size:13px;margin:8px 0;line-height:1.5;background:var(--card2);border-radius:8px;padding:10px;display:none;}
   .card-desc.open{display:block;}
   .toggle-desc{background:none;border:none;color:var(--accent2);font-size:12px;padding:4px 0;text-decoration:underline;}
@@ -484,6 +485,7 @@ function render(){
   });
 
   updateStats();
+  setTimeout(runWikiQueue, 100);
 }
 
 function renderCard(item){
@@ -520,6 +522,11 @@ function renderCard(item){
     notes.className='card-notes'; notes.textContent = item.notes;
     card.appendChild(notes);
   }
+  const wikiDiv = document.createElement('div');
+  wikiDiv.className='wiki-summary';
+  wikiDiv.dataset.wikiAddr = item.address||'';
+  wikiDiv.dataset.wikiPlace = item.place||'';
+  card.appendChild(wikiDiv);
 
   if(item.desc){
     const toggle = document.createElement('button');
@@ -812,6 +819,45 @@ async function renderMapMarkers(filterDay){
   if(bounds.length>1) leafletMap.fitBounds(bounds, {padding:[30,30]});
   status.textContent = `${bounds.length} נקודות על המפה`;
   setTimeout(()=>leafletMap.invalidateSize(),100);
+}
+
+async function fetchWikiSummary(address, place){
+  const cacheKey = 'wiki:' + address;
+  const cached = localStorage.getItem(cacheKey);
+  if(cached !== null) return cached;
+  try{
+    const query = address.replace(/\d+[-\d]*/g,'').replace(/Chome|Ward|City|Street|Japan/gi,'').replace(/\s+/g,' ').trim();
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*&srlimit=1`;
+    const searchRes = await fetch(searchUrl);
+    const searchJson = await searchRes.json();
+    const results = searchJson?.query?.search;
+    if(!results || results.length===0){ localStorage.setItem(cacheKey,''); return ''; }
+    const title = results[0].title;
+    const summaryRes = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+    const summaryJson = await summaryRes.json();
+    const extract = summaryJson?.extract || '';
+    const sentences = extract.match(/[^.!?]+[.!?]+/g) || [];
+    const short = sentences.slice(0,2).join(' ').trim();
+    localStorage.setItem(cacheKey, short);
+    return short;
+  }catch(e){ return ''; }
+}
+
+let wikiQueueRunning = false;
+async function runWikiQueue(){
+  if(wikiQueueRunning) return;
+  wikiQueueRunning = true;
+  const divs = document.querySelectorAll('.wiki-summary');
+  for(const div of divs){
+    if(div.textContent) continue;
+    const addr = div.dataset.wikiAddr;
+    const place = div.dataset.wikiPlace;
+    if(!addr) continue;
+    const summary = await fetchWikiSummary(addr, place);
+    if(summary && div.isConnected) div.textContent = summary;
+    await new Promise(r=>setTimeout(r,350));
+  }
+  wikiQueueRunning = false;
 }
 
 document.getElementById('mapBtn').onclick = openMap;
