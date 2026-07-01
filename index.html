@@ -485,7 +485,6 @@ function render(){
   });
 
   updateStats();
-  setTimeout(runWikiQueue, 100);
 }
 
 function renderCard(item){
@@ -522,11 +521,13 @@ function renderCard(item){
     notes.className='card-notes'; notes.textContent = item.notes;
     card.appendChild(notes);
   }
-  const wikiDiv = document.createElement('div');
-  wikiDiv.className='wiki-summary';
-  wikiDiv.dataset.wikiAddr = item.address||'';
-  wikiDiv.dataset.wikiPlace = item.place||'';
-  card.appendChild(wikiDiv);
+  const wikiText = WIKI_SUMMARIES[item.address||''];
+  if(wikiText){
+    const wikiDiv = document.createElement('div');
+    wikiDiv.className='wiki-summary';
+    wikiDiv.textContent = wikiText;
+    card.appendChild(wikiDiv);
+  }
 
   if(item.desc){
     const toggle = document.createElement('button');
@@ -821,44 +822,50 @@ async function renderMapMarkers(filterDay){
   setTimeout(()=>leafletMap.invalidateSize(),100);
 }
 
-async function fetchWikiSummary(address, place){
-  const cacheKey = 'wiki:' + address;
-  const cached = localStorage.getItem(cacheKey);
-  if(cached !== null) return cached;
-  try{
-    const query = address.replace(/\d+[-\d]*/g,'').replace(/Chome|Ward|City|Street|Japan/gi,'').replace(/\s+/g,' ').trim();
-    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*&srlimit=1`;
-    const searchRes = await fetch(searchUrl);
-    const searchJson = await searchRes.json();
-    const results = searchJson?.query?.search;
-    if(!results || results.length===0){ localStorage.setItem(cacheKey,''); return ''; }
-    const title = results[0].title;
-    const summaryRes = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
-    const summaryJson = await summaryRes.json();
-    const extract = summaryJson?.extract || '';
-    const sentences = extract.match(/[^.!?]+[.!?]+/g) || [];
-    const short = sentences.slice(0,2).join(' ').trim();
-    localStorage.setItem(cacheKey, short);
-    return short;
-  }catch(e){ return ''; }
-}
-
-let wikiQueueRunning = false;
-async function runWikiQueue(){
-  if(wikiQueueRunning) return;
-  wikiQueueRunning = true;
-  const divs = document.querySelectorAll('.wiki-summary');
-  for(const div of divs){
-    if(div.textContent) continue;
-    const addr = div.dataset.wikiAddr;
-    const place = div.dataset.wikiPlace;
-    if(!addr) continue;
-    const summary = await fetchWikiSummary(addr, place);
-    if(summary && div.isConnected) div.textContent = summary;
-    await new Promise(r=>setTimeout(r,350));
-  }
-  wikiQueueRunning = false;
-}
+const WIKI_SUMMARIES = {
+  '68 Fukusa Yabunouchicho Fushimi Ward Kyoto Japan': 'מקדש שינטו מפורסם בקיוטו המוביל לפסגת ההר דרך אלפי שערי טוריי כתומים — מהמקומות הצילומיים המרהיבים ביותר ביפן.',
+  '15 Chome 778 Honmachi Higashiyama Ward Kyoto Japan': 'מתחם מקדש זן ענק מהמאה ה-13, מפורסם בגשר הפנורמי המשקיף על יערות מייפל בוערים בצבעי כתום ואדום בסתיו.',
+  'Nishiki Market Nakagyo Ward Kyoto Japan': '"המטבח של קיוטו" — שוק אוכל צבעוני באורך 400 מ\' בלב העיר, עם מאות דוכנים של מאכלים מסורתיים, תפוזים כבושים וטעימות ייחודיות.',
+  '1 Chome 294 Kiyomizu Higashiyama Ward Kyoto Japan': 'מקדש בודהיסטי עתיק מהמאה ה-8 הניצב על במת עץ ענקית ללא מסמר אחד, משקיף על קיוטו — אתר מורשת עולמית של אונסקו.',
+  'Kurama dera Sakyo Ward Kyoto Japan': 'מקדש עתיק ומסתורי בהרי הצפון של קיוטו, מוקדש לאנרגיה הקוסמית, עם שביל טרק מוריק דרך יערות ארזים ושורשי עצים עצומים.',
+  '180 Kuramakibunacho Sakyo Ward Kyoto Japan': 'כפר הרים קסום בעמק ירוק ליד קוראמה, מפורסם במסעדות קיץ הצפות על הנהר ובמקדש קיבונה המוארת בפנסי אבן.',
+  'Pontocho Kyoto Japan': 'סמטה צרה ומוארת פנסים לאורך נהר הקאמו בקיוטו, מרכזת מסעדות אקסקלוסיביות, בתי גיישות ובארים מאז המאה ה-16.',
+  '68 Sagaogurayama Tabuchicho Ukyo Ward Kyoto Japan': 'יער הבמבוק האייקוני ומקדש טנריו-ג\'י לצידו — יחד מגדירים את חוויית רובע אראשיימה, חובה להגיע בבוקר מוקדם.',
+  '32 Sagatoriimoto Kozachicho Ukyo Ward Kyoto Japan': 'מקדש בודהיסטי שקט ומוסתר ביערות אראשיימה, מכוסה שטיח של 15 מינים שונים של טחב ירוק עם קריפטוסים ומייפלים אדומים.',
+  'Adashino Nenbutsu ji Ukyo Ward Kyoto Japan': 'מקדש קדום בשולי אראשיימה המכיל כ-8,000 פסלוני אבן קדושים, הנצחה לנשמות אנשים שגופותיהם ננטשו בשדות בתקופת היאאן.',
+  'Togetsukyo Bridge Arashiyama Kyoto Japan': 'גשר אייקוני מ-1934 על נהר הקאטסורה, שמו "הגשר החוצה את הירח" — נקודת מפגש נשימה-עוצרת עם נוף הרי אראשיימה בצבעי הסתיו.',
+  '61 Sagaichikawa Mankijicho Nishikyo Ward Kyoto Japan': 'פארק ייחודי על פסגת הר אראשיימה שבו מסתובבים חופשי 120 קופי מאקאק יפניים, עם תצפית פנורמית עוצרת נשימה על קיוטו וסביבותיה.',
+  '1-1 Osakajo Chuo Ward Osaka Japan': 'טירת אוסקה מ-1583 המוקפת חפיר ויערות עצים — סמל שלטון השוגון טויוטומי הידיושי, עם גנים נוצצים בצבעי גינקו ומייפל בסתיו.',
+  '2 Chome 4-1 Nippombashi Chuo Ward Osaka Japan': '"מטבח אוסקה" — שוק מזון היסטורי הפועל מ-1822 עם 180 חנויות של ים טרי, תמנון, בשר קובה ומאכלים מקומיים ייחודיים.',
+  'Sennichimae Doguyasuji Shopping Street Osaka Japan': 'רחוב ייחודי בלב אוסקה המוקדש לציוד מסעדות מקצועי — סכיני שף, סירי קראמיקה, ריהוט מסעדות ומפורסמות פלסטיק ריאליסטיות של אוכל.',
+  '1 Chome 9-1 Shinsaibashisuji Chuo Ward Osaka Japan': 'שינסאיבאשי — רחוב קניות מפורסם של אוסקה עם קניון מקורה ענק, ובו חנויות אופנה בינלאומיות ומקומיות לאורך כ-600 מ\'.',
+  'Dotonbori Chuo Ward Osaka Japan': 'הלב הפועם של אוסקה — תעלה עם שלטי ניאון ענקיים, דוכני מזון שוקקים וסמל גליקו הרץ המפורסם, הכל בהתבסס על מסורת בידור מ-1621.',
+  'Kyoto Station Japan': 'תחנת קיוטו — תחנת הרכבת המרכזית של העיר, גם נקודת יציאה לשינקנסן — "כדור הברק" המגיע לטוקיו תוך 135 דקות בלבד.',
+  '2 Chome 3-1 Asakusa Taito City Tokyo Japan': 'המקדש הבודהיסטי העתיק ביותר בטוקיו, הוקם ב-628, מקבל 30 מיליון מבקרים בשנה. שער הקמינאריאמון האדום ורחוב נאקאמיסה הם מראות בלתי נשכחים.',
+  '2 Chome 24-12 Shibuya Tokyo Japan': 'שיבויה סקיי — תצפית גג פתוחה לרוח בגובה 229 מ\' עם נוף 360° על צומת שיבויה, הצומת ההומה בעולם, ועל כל אופקי טוקיו.',
+  'Nonbei Yokocho Shibuya Tokyo Japan': '"סמטת הנהנים" — בריחה מהזמן בשיבויה, שורת בארים קטנים בסגנון ישן-יפני ממוקמים בין מסילות הרכבת, הכי אותנטי בסביבה.',
+  'Mount Takao Hachioji Tokyo Japan': 'הר טאקאו בגובה 599 מ\' — הטיול הפופולרי ביותר מטוקיו, עם 8 מסלולים, מקדש יאקואין עתיק ותצפית נדירה להר פוג\'י ביום צלול.',
+  'Keio Takaosan Onsen Gokurakuyu Hachioji Tokyo Japan': 'אונסן מודרני ורגוע ממש ליד תחנת הרכבת, מציע אמבטיות מים חמים, סאונה יבשה ורטובה — סיום מושלם לאחר הטרק בהר טאקאו.',
+  '1-1 Yoyogikamizonocho Shibuya City Tokyo Japan': 'מקדש שינטו מרכזי מ-1920 המוקדש לקיסר מייג\'י, מוקף יער עירוני שלו של 70 דונם — אוזיס ירוק בלב טוקיו הצפופה.',
+  'Takeshita Street Harajuku Tokyo Japan': 'רחוב טקשיטה הצבעוני — לב תרבות הפופ ואופנת הרחוב היפנית, סמוך לשדרת אומוטסנדו האלגנטית עם בוטיקים נסתרים.',
+  '11 Naitomachi Shinjuku City Tokyo Japan': 'פארק קיסרי ענק המשלב גנים בסגנון יפני, צרפתי ואנגלי — אחד היפים בטוקיו לצפיית עלוות מייפל ועצי גינקו זהובים בסתיו.',
+  'Omoide Yokocho Shinjuku Tokyo Japan': 'אומוידה יוקוצ\'ו — "שביל הזיכרונות" עם דוכני יקיטורי מעשנים; וקאבוקיצ\'ו — "עיר נמה לא" הגדולה באסיה, רובע בידור שאינו נרדם.',
+  'Kencho ji Temple Kamakura Japan': 'מקדש הזן הוותיק ביותר ביפן, הוקם ב-1253, ראש "חמשת מקדשי הזן הגדולים" של קמאקורה, עם גן מדיטציה בצורת הסימן הסיני "לב".',
+  '4 Chome 2-28 Hase Kamakura Japan': 'הבודהה הגדול — פסל ברונזה אייקוני בגובה 13.35 מ\' מהמאה ה-13, חשוף לרוח ולשמיים לאחר שהצונאמי הרס את הבית שכיסה אותו בעבר.',
+  '3 Chome 11-2 Hase Kamakura Japan': 'מקדש האסה-דרה השוכן בהרים של קמאקורה, מפורסם בפסל עץ קאנון עצום בגובה 9 מ\' ובנוף פנורמי מרהיב על מפרץ סגמי.',
+  'Komachi dori Kamakura Japan': 'רחוב קומאצ\'י — שדרת האוכל והמזכרות של קמאקורה, מובילה ישירות למקדש השינטו צורוגאוקה האצ\'ימאנגו מהמאה ה-12 שהוא לב העיר ההיסטורית.',
+  '4 Chome Fukuzumi Chuo City Tokyo Japan': 'שוק הדגים החיצוני ההיסטורי של טוקיו — מקום לאכול סושי, קקיאגה ואוקונומיאקי ישר מהחנויות בבוקר, חוויית אוכל ים אמיתית.',
+  '6 Chome 1-16 Toyosu Koto City Tokyo Japan': 'מוזיאון דיגיטלי אימרסיבי שבו נכנסים פנימה אל תוך יצירות אמנות חיות — מים, פרחים וקוים אינסופיים עוטפים את הגוף מכל עבר.',
+  '1-1 Kanda Hanaokacho Chiyoda City Tokyo Japan': '"עיר החשמל" — שכונת אקיהברה המפורסמת לאלקטרוניקה, אנימה, מנגה ותרבות הפופ, הפכה לסמל בינלאומי של יפן המודרנית.',
+  'Ginza Chuo City Tokyo Japan': 'רובע גינזה — לב הפאר של טוקיו עם מסעדות מישלן, חנויות בוטיק של מותגי עולם ומסעדות סושי ואומאקאסה מהטובות ביפן.',
+  'Okutama Tokyo Japan': 'עמק אוקוטאמה — שמורת הטבע הפראית של טוקיו, עם שבילי טרק בין גשרי חבלים, יערות אורן ירוקים וכפרים נסתרים רחוק מרעש העיר.',
+  'Lake Okutama Tokyo Japan': 'אגם שמורים ירוק ושלו מעל סכר אוגוצ\'י, מוקף יערות עם שבילים לאורך הגדה — מקום מנוחה מושלם לאחר הטרק הארוך בעמק.',
+  '1-1 Kasumigaokacho Shinjuku City Tokyo Japan': 'שדרת הגינקו הזהובה של גאיין — כ-150 עצי גינקו ענקיים צובעים את השדרה בזהב אחיד בנובמבר, אחד מראות הסתיו היפים ביותר בטוקיו.',
+  'Kappabashi Tokyo Japan': '"עיר המטבח" של טוקיו — רחוב שלם בין אואינו לאסאקוסה המלא חנויות לציוד מסעדות: סכיני שף יפניים, כלי חרסינה ומפורסמות פלסטיק ריאליסטיות של אוכל.',
+  '6 Chome 9-5 Ginza Chuo City Tokyo Japan': 'יוניקלו גינזה — חנות הדגל הגדולה בעולם עם 12 קומות, וג\'ינזה סיקס — קניון יוקרה מרשים עם גן גג ועיצוב אמנותי.',
+  'Daiba Minato City Tokyo Japan': 'האי המלאכותי של טוקיו במפרץ — מרכז בידור ומסחר עם פסל גנדאם RX-0 בגובה 19.7 מ\' ונוף פנורמי לגשר הקשת ואופקי טוקיו.',
+  'Ueno Taito City Tokyo Japan': 'שוק אמיצ\'ו — שוק פתוח היסטורי ליד תחנת אואינו, עם 250+ חנויות שכבר פעלו בשחור בתקופת השחזור שלאחר מלחמת העולם השנייה.',
+};
 
 document.getElementById('mapBtn').onclick = openMap;
 document.getElementById('mapCloseBtn').onclick = ()=>{
