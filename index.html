@@ -92,6 +92,16 @@
 
 <main id="main"></main>
 
+<div id="splash" style="position:fixed;inset:0;background:#fbf7ee;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.6s;">
+  <div style="font-size:72px;line-height:1;">🗾</div>
+  <div style="font-size:24px;font-weight:600;color:#3a2e1c;">המסלול שלי ביפן</div>
+  <div style="font-size:14px;color:#7a6f5e;">13.11 – 25.11.2026</div>
+  <div style="margin-top:8px;width:36px;height:4px;border-radius:4px;background:#b23a2e;animation:splashBar 1.5s ease-in-out infinite alternate;"></div>
+</div>
+<style>
+@keyframes splashBar{from{width:36px}to{width:80px}}
+</style>
+
 <button class="fab" id="addBtn">+ הוסף נקודת עניין</button>
 
 <div class="modal-backdrop" id="modalBackdrop">
@@ -596,7 +606,7 @@ window.previewSectionImg = function(){
 
 document.getElementById('addBtn').onclick = ()=>openModal(null);
 document.getElementById('cancelBtn').onclick = closeModal;
-document.getElementById('modalBackdrop').onclick = (e)=>{ if(e.target.id==='modalBackdrop') closeModal(); };
+document.getElementById('modalBackdrop').onclick = (e)=>{ if(e.target.id==='modalBackdrop' && confirm('לסגור? השינויים לא יישמרו.')) closeModal(); };
 
 document.getElementById('saveBtn').onclick = async ()=>{
   const id = document.getElementById('editId').value;
@@ -712,10 +722,17 @@ document.getElementById('resetBtn').onclick = async ()=>{
   }
 };
 
+function hideSplash(){
+  const splash = document.getElementById('splash');
+  if(splash){ splash.style.opacity='0'; setTimeout(()=>splash.remove(), 650); }
+}
+
 onSnapshot(pointsRef, (snap)=>{
   data = snap.docs.map(d=>({id:d.id, ...d.data()}));
   render();
+  hideSplash();
 }, (err)=>{
+  hideSplash();
   document.getElementById('stats').innerHTML = '<span class="sync-badge sync-bad">⚠ שגיאת חיבור</span> ' + err.message;
 });
 
@@ -729,7 +746,7 @@ document.getElementById('guideCloseBtn').onclick = ()=>document.getElementById('
 document.getElementById('guideBackdrop').onclick = (e)=>{ if(e.target.id==='guideBackdrop') document.getElementById('guideBackdrop').classList.remove('open'); };
 document.getElementById('guideAddBtn').onclick = ()=>openSectionModal(null);
 document.getElementById('sectionCancelBtn').onclick = ()=>document.getElementById('sectionBackdrop').classList.remove('open');
-document.getElementById('sectionBackdrop').onclick = (e)=>{ if(e.target.id==='sectionBackdrop') document.getElementById('sectionBackdrop').classList.remove('open'); };
+document.getElementById('sectionBackdrop').onclick = (e)=>{ if(e.target.id==='sectionBackdrop' && confirm('לסגור? השינויים לא יישמרו.')) document.getElementById('sectionBackdrop').classList.remove('open'); };
 
 document.getElementById('sectionSaveBtn').onclick = async ()=>{
   const id = document.getElementById('s_id').value;
