@@ -47,6 +47,16 @@
   .resto-panel strong{color:#7a4f00;display:block;margin-top:6px;}
   .resto-panel strong:first-child{margin-top:0;}
   .resto-tip{color:#5a4500;background:#ffecc7;border-radius:6px;padding:4px 8px;margin-top:6px;font-style:italic;}
+  .stars-row{display:flex;gap:2px;margin:6px 0 2px;align-items:center;}
+  .star{font-size:22px;cursor:pointer;color:#d0c8b8;line-height:1;transition:color 0.1s;}
+  .star.filled,.star.hover{color:#e8a020;}
+  .star-label{font-size:11px;color:var(--muted);margin-right:6px;}
+  .my-notes-wrap{margin:4px 0;}
+  .my-notes-btn{background:none;border:none;color:var(--accent2);font-size:12px;padding:3px 0;text-decoration:underline;cursor:pointer;}
+  .my-notes-area{display:none;margin-top:6px;}
+  .my-notes-area.open{display:block;}
+  .my-notes-area textarea{width:100%;resize:vertical;font-size:13px;border-radius:8px;padding:8px;border:1px solid var(--border);background:var(--card2);color:var(--text);font-family:inherit;}
+  .my-notes-save{margin-top:5px;font-size:12px;padding:5px 14px;}
   .card-desc{color:var(--text);font-size:13px;margin:8px 0;line-height:1.5;background:var(--card2);border-radius:8px;padding:10px;display:none;}
   .card-desc.open{display:block;}
   .toggle-desc{background:none;border:none;color:var(--accent2);font-size:12px;padding:4px 0;text-decoration:underline;}
@@ -534,6 +544,57 @@ function renderCard(item){
     wikiDiv.textContent = wikiText;
     card.appendChild(wikiDiv);
   }
+
+  // כוכבי דירוג
+  const rating = item.rating || 0;
+  const starsRow = document.createElement('div');
+  starsRow.className = 'stars-row';
+  const starLabel = document.createElement('span');
+  starLabel.className = 'star-label';
+  starLabel.textContent = 'דירוג:';
+  starsRow.appendChild(starLabel);
+  const starEls = [];
+  for(let i=1; i<=5; i++){
+    const star = document.createElement('span');
+    star.className = 'star' + (i <= rating ? ' filled' : '');
+    star.textContent = '★';
+    star.onmouseenter = ()=> starEls.forEach((s,idx)=> s.classList.toggle('hover', idx < i));
+    star.onmouseleave = ()=> starEls.forEach(s=> s.classList.remove('hover'));
+    star.onclick = ()=>{
+      updateDoc(doc(db,'points',item.id), {rating: i});
+      starEls.forEach((s,idx)=> { s.classList.toggle('filled', idx<i); s.classList.remove('hover'); });
+    };
+    starEls.push(star);
+    starsRow.appendChild(star);
+  }
+  card.appendChild(starsRow);
+
+  // הערה אישית
+  const myNotesWrap = document.createElement('div');
+  myNotesWrap.className = 'my-notes-wrap';
+  const myNotesBtn = document.createElement('button');
+  myNotesBtn.className = 'my-notes-btn';
+  myNotesBtn.textContent = item.myNotes ? '📝 הערה אישית (לחץ לעריכה)' : '📝 הוסף הערה אישית';
+  const myNotesArea = document.createElement('div');
+  myNotesArea.className = 'my-notes-area' + (item.myNotes ? ' open' : '');
+  const myNotesTa = document.createElement('textarea');
+  myNotesTa.rows = 3;
+  myNotesTa.placeholder = 'הערות, רשימת קניות, מה לאכול, מה לא לפספס...';
+  myNotesTa.value = item.myNotes || '';
+  const myNotesSave = document.createElement('button');
+  myNotesSave.className = 'btn-primary my-notes-save';
+  myNotesSave.textContent = '💾 שמור הערה';
+  myNotesSave.onclick = ()=>{
+    const val = myNotesTa.value.trim();
+    updateDoc(doc(db,'points',item.id), {myNotes: val});
+    myNotesBtn.textContent = val ? '📝 הערה אישית (לחץ לעריכה)' : '📝 הוסף הערה אישית';
+  };
+  myNotesBtn.onclick = ()=> myNotesArea.classList.toggle('open');
+  myNotesArea.appendChild(myNotesTa);
+  myNotesArea.appendChild(myNotesSave);
+  myNotesWrap.appendChild(myNotesBtn);
+  myNotesWrap.appendChild(myNotesArea);
+  card.appendChild(myNotesWrap);
 
   const restoData = RESTAURANT_TIPS[item.address||''];
   if(restoData){
