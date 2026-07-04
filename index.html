@@ -115,7 +115,7 @@
     <button id="dedupBtn" class="link-edit">🧹 כפילויות</button>
     <button id="resetBtn" class="link-del">איפוס</button>
   </div>
-  <div class="stats" id="stats"><span id="syncBadge" class="sync-badge">מתחבר...</span></div>
+  <div class="stats" id="stats"><span id="syncBadge" class="sync-badge">מתחבר...</span> <span id="userNameBadge" style="font-size:12px;color:var(--muted);cursor:pointer;" title="לחץ לשינוי שם"></span></div>
 </header>
 
 <main id="main"></main>
@@ -224,15 +224,21 @@ const db = getFirestore(app);
 const pointsRef = collection(db, "points");
 const guideRef = collection(db, "guide");
 
-function getUserName(){
+function getUserName(){ return localStorage.getItem('tripUserName')||'אנונימי'; }
+function initUserName(){
   let name = localStorage.getItem('tripUserName');
   if(!name){
-    name = prompt('שלום! מה שמך? (ישמר לזיהוי הערות ודירוגים)','');
-    if(name && name.trim()) localStorage.setItem('tripUserName', name.trim());
-    else { localStorage.setItem('tripUserName','אנונימי'); name='אנונימי'; }
+    name = prompt('שלום! מה שמך? (לזיהוי הערות ודירוגים)','') || 'אנונימי';
+    localStorage.setItem('tripUserName', name.trim());
   }
-  return name;
+  const badge = document.getElementById('userNameBadge');
+  badge.textContent = '👤 ' + getUserName();
+  badge.onclick = ()=>{
+    const n = prompt('שנה שם משתמש:', getUserName());
+    if(n && n.trim()){ localStorage.setItem('tripUserName', n.trim()); badge.textContent = '👤 ' + n.trim(); }
+  };
 }
+initUserName();
 
 function driveUrlToImg(url){
   if(!url) return url;
