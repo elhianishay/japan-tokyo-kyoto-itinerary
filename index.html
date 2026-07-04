@@ -436,6 +436,11 @@ function mapsUrl(item){
   if(item.mapLink && item.mapLink.trim()) return item.mapLink.trim();
   return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.address||'');
 }
+function appleMapsUrl(item){
+  const q = encodeURIComponent(item.address||item.place||'');
+  return 'maps://?q=' + q;
+}
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 function telUrl(phone){
   return 'tel:' + phone.replace(/[^0-9+]/g,'');
 }
@@ -674,10 +679,22 @@ function renderCard(item){
   const actions = document.createElement('div');
   actions.className='actions';
 
-  const mapA = document.createElement('a');
-  mapA.href = mapsUrl(item); mapA.target='_blank'; mapA.className='link-map';
-  mapA.textContent = '🧭 ניווט בגוגל מאפ';
-  actions.appendChild(mapA);
+  if(isIOS){
+    const appleA = document.createElement('a');
+    appleA.href = appleMapsUrl(item); appleA.className='link-map';
+    appleA.textContent = '🧭 ניווט';
+    actions.appendChild(appleA);
+    const gA = document.createElement('a');
+    gA.href = mapsUrl(item); gA.target='_blank'; gA.className='link-map';
+    gA.style.cssText='font-size:13px;padding:5px 10px;opacity:0.8;';
+    gA.textContent = 'G';
+    actions.appendChild(gA);
+  } else {
+    const mapA = document.createElement('a');
+    mapA.href = mapsUrl(item); mapA.target='_blank'; mapA.className='link-map';
+    mapA.textContent = '🧭 ניווט';
+    actions.appendChild(mapA);
+  }
 
   if(item.phone){
     const a = document.createElement('a');
