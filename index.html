@@ -224,6 +224,16 @@ const db = getFirestore(app);
 const pointsRef = collection(db, "points");
 const guideRef = collection(db, "guide");
 
+function getUserName(){
+  let name = localStorage.getItem('tripUserName');
+  if(!name){
+    name = prompt('שלום! מה שמך? (ישמר לזיהוי הערות ודירוגים)','');
+    if(name && name.trim()) localStorage.setItem('tripUserName', name.trim());
+    else { localStorage.setItem('tripUserName','אנונימי'); name='אנונימי'; }
+  }
+  return name;
+}
+
 function driveUrlToImg(url){
   if(!url) return url;
   const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
@@ -563,12 +573,18 @@ function renderCard(item){
     star.onmouseenter = ()=> starEls.forEach((s,idx)=> s.classList.toggle('hover', idx < i));
     star.onmouseleave = ()=> starEls.forEach(s=> s.classList.remove('hover'));
     star.onclick = ()=>{
-      updateDoc(doc(db,'points',item.id), {rating: i});
+      updateDoc(doc(db,'points',item.id), {rating: i, ratingBy: getUserName()});
       starEls.forEach((s,idx)=> { s.classList.toggle('filled', idx<i); s.classList.remove('hover'); });
+      ratingByEl.textContent = '— ' + getUserName();
     };
     starEls.push(star);
     starsRow.appendChild(star);
   }
+  const ratingByEl = document.createElement('span');
+  ratingByEl.className = 'star-label';
+  ratingByEl.style.marginRight = '4px';
+  ratingByEl.textContent = item.ratingBy ? '— ' + item.ratingBy : '';
+  starsRow.appendChild(ratingByEl);
   card.appendChild(starsRow);
 
   // הערה אישית
@@ -586,15 +602,26 @@ function renderCard(item){
   const myNotesSave = document.createElement('button');
   myNotesSave.className = 'btn-primary my-notes-save';
   myNotesSave.textContent = '💾 שמור הערה';
+  const myNotesByEl = document.createElement('span');
+  myNotesByEl.className = 'star-label';
+  myNotesByEl.style.cssText = 'margin-right:8px;font-style:italic;';
+  myNotesByEl.textContent = item.myNotesBy ? '— ' + item.myNotesBy : '';
   myNotesSave.onclick = ()=>{
     const val = myNotesTa.value.trim();
-    updateDoc(doc(db,'points',item.id), {myNotes: val});
+    const by = getUserName();
+    updateDoc(doc(db,'points',item.id), {myNotes: val, myNotesBy: by});
     myNotesBtn.textContent = val ? '📝 הערה אישית (לחץ לעריכה)' : '📝 הוסף הערה אישית';
+    myNotesByEl.textContent = val ? '— ' + by : '';
   };
   myNotesBtn.onclick = ()=> myNotesArea.classList.toggle('open');
+  const myNotesBtnRow = document.createElement('div');
+  myNotesBtnRow.style.display = 'flex';
+  myNotesBtnRow.style.alignItems = 'center';
+  myNotesBtnRow.appendChild(myNotesBtn);
+  myNotesBtnRow.appendChild(myNotesByEl);
   myNotesArea.appendChild(myNotesTa);
   myNotesArea.appendChild(myNotesSave);
-  myNotesWrap.appendChild(myNotesBtn);
+  myNotesWrap.appendChild(myNotesBtnRow);
   myNotesWrap.appendChild(myNotesArea);
   card.appendChild(myNotesWrap);
 
