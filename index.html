@@ -33,8 +33,39 @@
   .day-title{font-size:16px;font-weight:700;color:var(--accent);margin:14px 0 6px;padding-right:4px;}
   .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:10px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(60,46,20,0.06);}
   .card.done{opacity:0.6;}
-  .card-photo{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block;background:var(--card2);}
+  .card-photo{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:10px;display:block;background:var(--card2);cursor:zoom-in;}
   .card-thumb{width:44px;height:44px;object-fit:cover;border-radius:8px;flex-shrink:0;background:var(--card2);}
+  .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:99999;display:none;align-items:center;justify-content:center;overflow:hidden;touch-action:none;}
+  .lightbox.open{display:flex;}
+  .lightbox img{max-width:100%;max-height:100%;transform-origin:0 0;will-change:transform;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;}
+  .lightbox-bar{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:10px;display:flex;gap:8px;z-index:2;}
+  .lightbox-btn{width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,.92);color:#111;font-size:22px;font-weight:700;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;}
+  .allergy-launch{background:#b71c1c;color:#fff;border:none;border-radius:12px;padding:12px 16px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(183,28,28,.3);}
+  .allergy-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99998;display:none;overflow:auto;-webkit-overflow-scrolling:touch;}
+  .allergy-modal.open{display:block;}
+  .allergy-topbar{position:sticky;top:0;z-index:2;display:flex;gap:8px;justify-content:space-between;align-items:center;background:#b71c1c;color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;}
+  .allergy-topbar button{border:none;border-radius:10px;padding:10px 14px;font-size:15px;font-weight:700;cursor:pointer;}
+  .allergy-topbar .reset{background:rgba(255,255,255,.2);color:#fff;}
+  .allergy-topbar .close{background:#fff;color:#b71c1c;}
+  .allergy-card{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#faf8f5;color:#333;padding:20px;max-width:640px;margin:0 auto;}
+  .allergy-card .header{text-align:center;border-bottom:3px solid #b71c1c;padding-bottom:15px;margin-bottom:20px;}
+  .allergy-card .title-jp{font-size:2rem;color:#b71c1c;margin:0;}
+  .allergy-card .title-he{font-size:1.2rem;margin:5px 0 0 0;color:#555;}
+  .allergy-card .message-jp{font-size:1.1rem;text-align:center;margin-bottom:20px;font-weight:bold;color:#444;}
+  .allergy-card .message-he{font-size:.95rem;color:#666;font-weight:normal;}
+  .allergy-card .allergy-table{width:100%;border-collapse:collapse;margin-bottom:25px;background:#fff;}
+  .allergy-card th,.allergy-card td{border:1px solid #e0e0e0;padding:12px 10px;text-align:right;font-size:16px;}
+  .allergy-card th{background:#f4f4f4;font-weight:bold;}
+  .allergy-card .jp-text{font-weight:bold;text-align:left;color:#b71c1c;font-size:17px;}
+  .allergy-card .checkbox{width:44px;text-align:center;font-size:1.6rem;color:#ccc;}
+  .allergy-card .section-title{background:#efefef;font-weight:bold;font-size:1.1rem;padding:8px 12px;margin-top:15px;border-right:4px solid #b71c1c;color:#333;}
+  .allergy-card .allergy-row{cursor:pointer;}
+  .allergy-card .allergy-row.checked{background:#fff0f0;}
+  .allergy-card .allergy-row.checked td{font-weight:bold;}
+  .allergy-card .allergy-row.checked .checkbox{color:#b71c1c;}
+  .link-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;}
+  .link-row input{flex:1;min-width:110px;}
+  .link-row .link-remove{cursor:pointer;font-size:13px;padding:6px 10px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--danger,#c0392b);}
   .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
   .card-time{color:var(--accent2);font-weight:700;font-size:13px;white-space:nowrap;}
   .card-name-row{display:flex;align-items:center;gap:10px;margin:2px 0 4px;}
@@ -89,6 +120,10 @@
   .guide-section h3{margin:0 0 6px;font-size:15px;color:var(--accent);}
   .guide-section p{margin:0;font-size:13px;line-height:1.6;white-space:pre-wrap;color:var(--text);}
   .guide-section .actions{margin-top:8px;}
+  .guide-cat-filter{width:100%;margin-bottom:12px;}
+  .guide-cat-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:16px 0 8px;padding:8px 12px;background:var(--accent);color:#fff;border-radius:8px;font-size:14px;font-weight:700;}
+  .guide-cat-title:first-child{margin-top:0;}
+  .guide-cat-title .count{font-size:11px;font-weight:600;opacity:0.85;}
   .btn-link{background:var(--card2);color:var(--accent2);border:1px solid var(--border);font-size:13px;}
   #mapScreen{display:none;position:fixed;inset:0;z-index:40;flex-direction:column;background:var(--bg);}
   #mapScreen.open{display:flex;}
@@ -96,6 +131,8 @@
   .map-header{padding:10px 14px;background:var(--card2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
   .map-header select{flex:1;}
   .map-status{font-size:12px;color:var(--muted);padding:4px 14px;background:var(--bg);flex-shrink:0;}
+  .my-location-dot{width:18px;height:18px;border-radius:50%;background:#2c7ab2;border:3px solid #fff;box-shadow:0 0 0 0 rgba(44,122,178,0.5);animation:locPulse 1.8s infinite;}
+  @keyframes locPulse{0%{box-shadow:0 0 0 0 rgba(44,122,178,0.45);}70%{box-shadow:0 0 0 16px rgba(44,122,178,0);}100%{box-shadow:0 0 0 0 rgba(44,122,178,0);}}
 </style>
 </head>
 <body>
@@ -107,6 +144,7 @@
     <input id="searchBox" placeholder="חיפוש מקום..." style="flex:1;min-width:120px;">
     <button id="mapBtn" class="link-map">🗺 מפה</button>
     <button id="guideBtn" class="link-edit">📖 מדריך לוגיסטי</button>
+    <button id="allergyOpenBtn" class="link-edit" style="background:#b71c1c;color:#fff;">🍽️ כרטיס העדפות מזון</button>
     <button id="exportBtn" class="link-call">💾 גיבוי</button>
     <label id="importLabel" for="importFile" class="link-call" style="cursor:pointer;font-size:13px;padding:6px 10px;border-radius:8px;">📂 שחזור</label>
     <input type="file" id="importFile" accept=".json" style="display:none">
@@ -122,6 +160,7 @@
   <div class="map-header">
     <button id="mapCloseBtn" class="btn-primary" style="flex-shrink:0;font-size:16px;padding:10px 16px;">← חזרה</button>
     <select id="mapDayFilter"><option value="all">כל הימים</option></select>
+    <button id="locateBtn" class="btn-secondary" style="flex-shrink:0;font-size:15px;padding:10px 14px;">📍 מיקום</button>
   </div>
   <div class="map-status" id="mapStatus"></div>
   <div id="mapEl"></div>
@@ -149,7 +188,12 @@
     <div class="field"><label>שם המקום</label><input id="f_place" placeholder="שם המקום"></div>
     <div class="field"><label>כתובת (לניווט אוטומטי בגוגל מאפ)</label><input id="f_address" placeholder="כתובת באנגלית, למשל: Shibuya Tokyo Japan"></div>
     <div class="field"><label>קישור מפה מותאם (אופציונלי - גובר על הכתובת)</label><input id="f_maplink" placeholder="https://maps.google.com/..."></div>
-    <div class="field"><label>קישור לאתר עם הסברים (ויקיפדיה / אתר רשמי וכד')</label><input id="f_website" placeholder="https://..."></div>
+    <div class="field">
+      <label>קישורים לאתרים (אפשר כמה)</label>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">מדביקים את הכתובת בשדה עם https. אפשר להוסיף שם כמו "ויקיפדיה".</div>
+      <div id="linksEditor"></div>
+      <button type="button" id="addLinkBtn" class="btn-secondary" style="margin-top:6px;">+ הוסף קישור</button>
+    </div>
     <div class="field">
       <label>תמונה</label>
       <input id="f_photo" placeholder="הדבק קישור (URL או Google Drive)..." oninput="previewImg()">
@@ -174,6 +218,7 @@
 <div class="modal-backdrop guide-modal" id="guideBackdrop">
   <div class="modal">
     <h2>📖 המדריך הלוגיסטי המורחב</h2>
+    <select id="guideCategoryFilter" class="guide-cat-filter"><option value="all">כל הקטגוריות</option></select>
     <div id="guideList"></div>
     <div class="modal-actions">
       <button id="guideAddBtn" class="btn-secondary">+ הוסף סעיף</button>
@@ -187,7 +232,18 @@
     <h2 id="sectionModalTitle">סעיף במדריך</h2>
     <input type="hidden" id="s_id">
     <div class="field"><label>כותרת הסעיף</label><input id="s_title" placeholder="לדוגמה: כרטיסי IC"></div>
-    <div class="field"><label>קישור לתמונה (URL)</label><input id="s_photo" placeholder="https://...jpg" oninput="previewSectionImg()"><img id="sectionImgPreview" class="img-preview"></div>
+    <div class="field"><label>קטגוריה</label><input id="s_category" list="categoryOptions" placeholder="למשל: תחבורה, אוכל, קניות"><datalist id="categoryOptions"></datalist></div>
+    <div class="field">
+      <label>תמונה</label>
+      <input id="s_photo" placeholder="הדבק קישור (URL או Google Drive)..." oninput="previewSectionImg()">
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+        <label id="sectionUploadLabel" for="s_photo_file" style="cursor:pointer;font-size:13px;padding:6px 12px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);">📷 בחר תמונה או PDF</label>
+        <input type="file" id="s_photo_file" accept="image/*,application/pdf" style="display:none">
+        <button type="button" id="s_photo_clear" style="cursor:pointer;font-size:13px;padding:6px 12px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--danger,#c0392b);">🗑 הסר תמונה</button>
+        <span id="sectionUploadStatus" style="font-size:12px;color:var(--muted);"></span>
+      </div>
+      <img id="sectionImgPreview" class="img-preview">
+    </div>
     <div class="field"><label>תוכן הסעיף</label><textarea id="s_content" rows="10"></textarea></div>
     <div class="modal-actions">
       <button id="sectionCancelBtn" class="link-edit">ביטול</button>
@@ -196,11 +252,32 @@
   </div>
 </div>
 
+<div id="imgLightbox" class="lightbox" role="dialog" aria-modal="true">
+  <div class="lightbox-bar">
+    <button id="lightboxOut" class="lightbox-btn" aria-label="הקטן">−</button>
+    <button id="lightboxIn" class="lightbox-btn" aria-label="הגדל">+</button>
+    <button id="lightboxClose" class="lightbox-btn" aria-label="סגור">✕</button>
+  </div>
+  <img id="lightboxImg" alt="תצוגה מוגדלת">
+</div>
+
+<div id="allergyModal" class="allergy-modal" role="dialog" aria-modal="true" aria-label="כרטיס העדפות מזון">
+  <div class="allergy-topbar">
+    <button class="reset" id="allergyResetBtn">נקה סימונים</button>
+    <strong>כרטיס העדפות מזון</strong>
+    <button class="close" id="allergyCloseBtn">סגור ✕</button>
+  </div>
+  <div class="allergy-card" dir="rtl" id="allergyCardBody"></div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, writeBatch, setDoc, getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getAuth, signInAnonymously, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-f_jx1-kRQGa_uvvLctRyTpTPVxspS0Q",
@@ -219,15 +296,16 @@ if('serviceWorker' in navigator){
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 const pointsRef = collection(db, "points");
 const guideRef = collection(db, "guide");
 
 function driveUrlToImg(url){
   if(!url) return url;
   const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if(m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w800`;
+  if(m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w2000`;
   const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if(m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w800`;
+  if(m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w2000`;
   return url;
 }
 
@@ -253,6 +331,308 @@ function resizeImageToBase64(file, maxPx=400, quality=0.75){
   });
 }
 
+let pdfjsPromise = null;
+function loadPdfJs(){
+  if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if(pdfjsPromise) return pdfjsPromise;
+  pdfjsPromise = new Promise((resolve, reject)=>{
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    script.onload = ()=>{
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      resolve(window.pdfjsLib);
+    };
+    script.onerror = ()=>reject(new Error('טעינת מנוע PDF נכשלה'));
+    document.head.appendChild(script);
+  });
+  return pdfjsPromise;
+}
+
+function compressCanvasToJpeg(canvas, limit=980000){
+  let quality = 0.92;
+  let data = canvas.toDataURL('image/jpeg', quality);
+  while(data.length > limit && quality > 0.4){
+    quality -= 0.1;
+    data = canvas.toDataURL('image/jpeg', quality);
+  }
+  let scale = 0.85;
+  while(data.length > limit && scale > 0.3){
+    const tmp = document.createElement('canvas');
+    tmp.width = Math.max(1, Math.round(canvas.width * scale));
+    tmp.height = Math.max(1, Math.round(canvas.height * scale));
+    tmp.getContext('2d').drawImage(canvas, 0, 0, tmp.width, tmp.height);
+    data = tmp.toDataURL('image/jpeg', 0.6);
+    scale -= 0.15;
+  }
+  return data;
+}
+
+async function pdfToImageBase64(file, maxWidth=2200){
+  const pdfjsLib = await loadPdfJs();
+  const data = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data}).promise;
+  const canvases = [];
+  let totalHeight = 0;
+  let targetWidth = 0;
+  for(let i=1; i<=pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const baseViewport = page.getViewport({scale:1});
+    const scale = Math.min(4, maxWidth / baseViewport.width);
+    const viewport = page.getViewport({scale});
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(viewport.width);
+    canvas.height = Math.round(viewport.height);
+    await page.render({canvasContext:canvas.getContext('2d'), viewport}).promise;
+    canvases.push(canvas);
+    totalHeight += canvas.height;
+    targetWidth = Math.max(targetWidth, canvas.width);
+  }
+  const MAX_DIM = 4000;
+  const fit = Math.min(1, MAX_DIM / targetWidth, MAX_DIM / totalHeight);
+  const out = document.createElement('canvas');
+  out.width = Math.round(targetWidth * fit);
+  out.height = Math.round(totalHeight * fit);
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, out.width, out.height);
+  let y = 0;
+  for(const c of canvases){
+    const w = Math.round(c.width * fit);
+    const h = Math.round(c.height * fit);
+    ctx.drawImage(c, 0, y, w, h);
+    y += h;
+  }
+  return compressCanvasToJpeg(out);
+}
+
+function setupLightbox(){
+  const box = document.getElementById('imgLightbox');
+  const img = document.getElementById('lightboxImg');
+  let scale = 1, tx = 0, ty = 0;
+  const clamp = (v, lo, hi)=>Math.min(hi, Math.max(lo, v));
+  function apply(){ img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`; }
+  function reset(){ scale = 1; tx = 0; ty = 0; apply(); }
+  window.openLightbox = function(src){ if(!src) return; img.src = src; box.classList.add('open'); reset(); };
+  function close(){ box.classList.remove('open'); img.removeAttribute('src'); }
+  document.getElementById('lightboxClose').onclick = close;
+  document.getElementById('lightboxIn').onclick = ()=>{ scale = clamp(scale * 1.4, 1, 8); apply(); };
+  document.getElementById('lightboxOut').onclick = ()=>{ scale = clamp(scale / 1.4, 1, 8); if(scale === 1){ tx = 0; ty = 0; } apply(); };
+  box.addEventListener('click', (e)=>{ if(e.target === box) close(); });
+
+  let lastX = 0, lastY = 0, dragging = false;
+  img.addEventListener('pointerdown', (e)=>{ if(e.pointerType === 'mouse'){ dragging = true; lastX = e.clientX; lastY = e.clientY; } });
+  img.addEventListener('pointermove', (e)=>{ if(dragging && e.pointerType === 'mouse'){ tx += e.clientX - lastX; ty += e.clientY - lastY; lastX = e.clientX; lastY = e.clientY; apply(); } });
+  window.addEventListener('pointerup', ()=>{ dragging = false; });
+  img.addEventListener('wheel', (e)=>{ e.preventDefault(); scale = clamp(scale * (e.deltaY < 0 ? 1.15 : 0.87), 1, 8); if(scale === 1){ tx = 0; ty = 0; } apply(); }, {passive:false});
+  img.addEventListener('dblclick', ()=>{ scale = scale > 1 ? 1 : 2.5; tx = 0; ty = 0; apply(); });
+
+  let pinch = false, startDist = 0, startScale = 1;
+  const dist = (t)=>Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  img.addEventListener('touchstart', (e)=>{
+    if(e.touches.length === 2){ pinch = true; startDist = dist(e.touches); startScale = scale; }
+    else if(e.touches.length === 1){ lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; }
+  }, {passive:false});
+  img.addEventListener('touchmove', (e)=>{
+    if(pinch && e.touches.length === 2){ e.preventDefault(); scale = clamp(startScale * dist(e.touches) / startDist, 1, 8); apply(); }
+    else if(!pinch && e.touches.length === 1 && scale > 1){ e.preventDefault(); tx += e.touches[0].clientX - lastX; ty += e.touches[0].clientY - lastY; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; apply(); }
+  }, {passive:false});
+  img.addEventListener('touchend', (e)=>{ if(e.touches.length < 2){ pinch = false; } if(scale === 1){ tx = 0; ty = 0; apply(); } });
+}
+setupLightbox();
+
+const ALLERGY_GROUPS = [
+  { title: "בשר ודגים / 肉・魚類", items: [
+    {he:"בשר לבן", jp:"豚肉"},
+    {he:"בקר", jp:"牛肉"},
+    {he:"עוף", jp:"鶏肉"},
+    {he:"בשר סוס", jp:"馬肉"},
+    {he:"בשר כבש", jp:"羊肉"},
+    {he:"דגים", jp:"魚"},
+    {he:"צלופח", jp:"うなぎ"},
+    {he:"סשימי (דג נא)", jp:"刺身"},
+    {he:"אוכל נא", jp:"生もの"},
+    {he:"פירות ים", jp:"海老、イカ等"}
+  ]},
+  { title: "אגוזים, ירקות ופירות / ナッツ・野菜・果物", items: [
+    {he:"בוטנים", jp:"落花生"},
+    {he:"אגוזי קשיו", jp:"カシューナッツ"},
+    {he:"אגוזי מלך", jp:"クルミ"},
+    {he:"שקדים", jp:"アーモンド"},
+    {he:"קוקוס", jp:"ココナッツ"},
+    {he:"פטריות", jp:"きのこ"},
+    {he:"שום ובצל", jp:"にんにく類"},
+    {he:"ירקות שורש", jp:"根菜"},
+    {he:"פירות", jp:"果物"}
+  ]},
+  { title: "שונות / その他", items: [
+    {he:"ביצה", jp:"卵"},
+    {he:"חלב (מוצרי חלב)", jp:"乳製品"},
+    {he:"דבש", jp:"はちみつ"},
+    {he:"ג'לטין", jp:"ゼラチン"},
+    {he:"חיטה", jp:"小麦"},
+    {he:"כוסמת", jp:"そば"},
+    {he:"שומשום", jp:"ごま"},
+    {he:"סויה", jp:"大豆"},
+    {he:"אלכוהול", jp:"酒"},
+    {he:"אלרגיה אחרת", jp:"他のアレルギー"}
+  ]}
+];
+
+const ALLERGY_STORAGE_KEY = "allergyChecks-v1";
+
+function loadAllergyChecks(){
+  try{ return new Set(JSON.parse(localStorage.getItem(ALLERGY_STORAGE_KEY) || "[]")); }
+  catch(e){ return new Set(); }
+}
+function saveAllergyChecks(set){
+  localStorage.setItem(ALLERGY_STORAGE_KEY, JSON.stringify([...set]));
+}
+
+function setupAllergyCard(){
+  const body = document.getElementById("allergyCardBody");
+  const modal = document.getElementById("allergyModal");
+  const checks = loadAllergyChecks();
+
+  function render(){
+    let html = `
+      <div class="header">
+        <h1 class="title-jp" dir="ltr">お食事制限</h1>
+        <h2 class="title-he">כרטיס הגבלות והעדפות מזון למסעדה</h2>
+      </div>
+      <div class="message-jp" dir="ltr">
+        誠にお手数ではございますが、以下のチェックされた食材を避けていただけますでしょうか。<br>
+        <span class="message-he">(אנא הימנעו מהמרכיבים המסומנים מטה ב-✔)</span>
+      </div>`;
+    ALLERGY_GROUPS.forEach((group, gi)=>{
+      html += `<div class="section-title">${group.title}</div><table class="allergy-table">`;
+      group.items.forEach((item, ii)=>{
+        const id = `g${gi}-i${ii}`;
+        const on = checks.has(id);
+        html += `<tr class="allergy-row ${on ? "checked" : ""}" data-id="${id}">
+          <td class="checkbox">${on ? "✔" : "☐"}</td>
+          <td>${item.he}</td>
+          <td class="jp-text" dir="ltr">${item.jp}</td>
+        </tr>`;
+      });
+      html += `</table>`;
+    });
+    body.innerHTML = html;
+    body.querySelectorAll(".allergy-row").forEach((row)=>{
+      row.onclick = ()=>{
+        const id = row.getAttribute("data-id");
+        if(checks.has(id)) checks.delete(id); else checks.add(id);
+        saveAllergyChecks(checks);
+        render();
+      };
+    });
+  }
+
+  window.openAllergyCard = function(){ render(); modal.classList.add("open"); document.body.style.overflow = "hidden"; };
+  function close(){ modal.classList.remove("open"); document.body.style.overflow = ""; }
+  document.getElementById("allergyCloseBtn").onclick = close;
+  document.getElementById("allergyResetBtn").onclick = ()=>{
+    if(confirm("לנקות את כל הסימונים?")){ checks.clear(); saveAllergyChecks(checks); render(); }
+  };
+}
+setupAllergyCard();
+document.getElementById("allergyOpenBtn").onclick = ()=>openAllergyCard();
+
+function normalizeLinkUrl(raw){
+  let url = String(raw || "")
+    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "")
+    .trim();
+  if(!url) return "";
+  if(/^www\./i.test(url)) url = "https://" + url;
+  if(!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = "https://" + url;
+  return url;
+}
+
+function looksLikeUrl(value){
+  const text = String(value || "").trim();
+  return /^(https?:\/\/|www\.|[a-z0-9-]+\.[a-z]{2,})/i.test(text);
+}
+
+function getPointLinks(item){
+  const links = [];
+  const seen = new Set();
+  const push = (title, rawUrl)=>{
+    const url = normalizeLinkUrl(rawUrl);
+    if(!url || seen.has(url)) return;
+    seen.add(url);
+    links.push({title: String(title || "").trim() || "קישור", url});
+  };
+  if(Array.isArray(item?.links)){
+    item.links.forEach((link)=>push(link?.title, link?.url));
+  }
+  push("אתר", item?.websiteUrl);
+  return links;
+}
+
+function addLinkRow(title="", url=""){
+  const editor = document.getElementById("linksEditor");
+  const row = document.createElement("div");
+  row.className = "link-row";
+  const urlInput = document.createElement("input");
+  urlInput.className = "link-url";
+  urlInput.type = "url";
+  urlInput.inputMode = "url";
+  urlInput.placeholder = "הדביקו כאן את הכתובת https://...";
+  urlInput.value = url;
+  urlInput.dir = "ltr";
+  const titleInput = document.createElement("input");
+  titleInput.className = "link-title";
+  titleInput.placeholder = "שם הקישור (אופציונלי)";
+  titleInput.value = title;
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "link-remove";
+  removeBtn.textContent = "✕";
+  removeBtn.onclick = ()=>{
+    row.remove();
+    if(!editor.querySelector(".link-row")) addLinkRow();
+  };
+  row.appendChild(urlInput);
+  row.appendChild(titleInput);
+  row.appendChild(removeBtn);
+  editor.appendChild(row);
+  return urlInput;
+}
+
+function fillLinksEditor(links){
+  const editor = document.getElementById("linksEditor");
+  editor.innerHTML = "";
+  if(links.length) links.forEach((link)=>addLinkRow(link.title, link.url));
+  else addLinkRow();
+}
+
+function readLinksFromEditor(){
+  const rows = [...document.querySelectorAll("#linksEditor .link-row")];
+  const links = [];
+  const seen = new Set();
+  rows.forEach((row)=>{
+    let title = row.querySelector(".link-title")?.value.trim() || "";
+    let url = row.querySelector(".link-url")?.value.trim() || "";
+    if(!url && looksLikeUrl(title)){
+      url = title;
+      title = "קישור";
+    } else if(url && !looksLikeUrl(url) && looksLikeUrl(title)){
+      const swapped = url;
+      url = title;
+      title = swapped;
+    }
+    url = normalizeLinkUrl(url);
+    if(!url || seen.has(url)) return;
+    seen.add(url);
+    links.push({title: title || "קישור", url});
+  });
+  return links;
+}
+
+document.getElementById("addLinkBtn").onclick = ()=>{
+  const input = addLinkRow();
+  setTimeout(()=>input?.focus(), 30);
+};
+
 document.getElementById('f_photo_file').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -267,6 +647,29 @@ document.getElementById('f_photo_file').addEventListener('change', async (e)=>{
     status.textContent = '⚠ שגיאה: ' + err.message;
   }
 });
+
+document.getElementById('s_photo_file').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const status = document.getElementById('sectionUploadStatus');
+  const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+  status.textContent = isPdf ? 'ממיר PDF לתמונה...' : 'מכין תמונה...';
+  try {
+    const base64 = isPdf ? await pdfToImageBase64(file) : await resizeImageToBase64(file);
+    document.getElementById('s_photo').value = base64;
+    status.textContent = '✓ מוכן';
+    previewSectionImg();
+  } catch(err){
+    status.textContent = '⚠ שגיאה: ' + err.message;
+  }
+});
+
+document.getElementById('s_photo_clear').onclick = ()=>{
+  document.getElementById('s_photo').value = '';
+  document.getElementById('s_photo_file').value = '';
+  document.getElementById('sectionUploadStatus').textContent = 'התמונה הוסרה (לחצו שמירה)';
+  previewSectionImg();
+};
 
 const DEFAULT_GUIDE = [
 {order:1, title:"אפליקציות חובה להתקנה (לפני הטיסה)", content:"Google Maps: האפליקציה הטובה ביותר לניווט רגלי ובתחבורה ציבורית ביפן. מעודכנת בזמן אמת, מראה מאיזה רציף הרכבת יוצאת ובאיזה קרון כדאי לשבת.\n\nJapan Travel by NAVITIME: מאפשרת פילטור מסלולים לפי סוגי כרטיסים (קווי JR בלבד או כרטיסי סאבוויי).\n\nGoogle Translate: חובה להוריד את חבילת השפה היפנית לשימוש אופליין. תכונת המצלמה מצילת חיים לקריאת תפריטים ושילוט.\n\nSmartEX: האפליקציה הרשמית להזמנת כרטיסי שינקנסן בקו טוקיו-קיוטו-אוסקה, מאפשרת לקשר לכרטיס IC הדיגיטלי."},
@@ -308,44 +711,118 @@ function linkify(text){
     return `<a href="${clean}" target="_blank" rel="noopener" style="color:var(--accent2);text-decoration:underline;">${clean}</a>${trail}`;
   });
 }
+const DEFAULT_CATEGORY = "כללי";
+const DEFAULT_GUIDE_CATEGORIES = ["כללי", "תחבורה", "כסף ותשלומים", "אוכל", "קניות", "אפליקציות שימושיות", "טיפים"];
+
+function guideCategory(sec){
+  return (sec.category && sec.category.trim()) || DEFAULT_CATEGORY;
+}
+function categoriesInUse(){
+  const seen = [];
+  guideData.forEach(sec=>{
+    const cat = guideCategory(sec);
+    if(!seen.includes(cat)) seen.push(cat);
+  });
+  return seen.sort((a,b)=>a.localeCompare(b,'he'));
+}
+function categorySuggestions(){
+  const set = new Set(DEFAULT_GUIDE_CATEGORIES);
+  categoriesInUse().forEach(cat=>set.add(cat));
+  return [...set];
+}
+function renderCategoryOptions(){
+  const datalist = document.getElementById('categoryOptions');
+  datalist.innerHTML = '';
+  categorySuggestions().forEach(cat=>{
+    const opt = document.createElement('option');
+    opt.value = cat;
+    datalist.appendChild(opt);
+  });
+}
+function renderGuideCategoryFilter(){
+  const sel = document.getElementById('guideCategoryFilter');
+  const current = sel.value;
+  sel.innerHTML = '<option value="all">כל הקטגוריות</option>';
+  categoriesInUse().forEach(cat=>{
+    const opt = document.createElement('option');
+    opt.value = cat; opt.textContent = cat;
+    sel.appendChild(opt);
+  });
+  if([...sel.options].some(o=>o.value===current)) sel.value = current;
+}
+
+function renderGuideSection(sec){
+  const div = document.createElement('div');
+  div.className = 'guide-section';
+  if(sec.photoUrl){
+    const img = document.createElement('img');
+    img.className='card-photo'; img.src=sec.photoUrl; img.loading='lazy';
+    img.onerror = ()=>{ img.style.display='none'; };
+    img.onclick = ()=>openLightbox(sec.photoUrl);
+    div.appendChild(img);
+  }
+  const h3 = document.createElement('h3'); h3.textContent = sec.title;
+  const p = document.createElement('p'); p.innerHTML = linkify(sec.content);
+  div.appendChild(h3); div.appendChild(p);
+  const actions = document.createElement('div'); actions.className='actions';
+  const editBtn = document.createElement('button');
+  editBtn.className='link-edit'; editBtn.textContent='✏ עריכה';
+  editBtn.onclick = ()=>openSectionModal(sec);
+  actions.appendChild(editBtn);
+  const delBtn = document.createElement('button');
+  delBtn.className='link-del'; delBtn.textContent='🗑 מחיקה';
+  delBtn.onclick = ()=>{
+    if(confirm('למחוק את הסעיף "'+sec.title+'"?')) deleteDoc(doc(db,'guide',sec.id));
+  };
+  actions.appendChild(delBtn);
+  div.appendChild(actions);
+  return div;
+}
+
 function renderGuide(){
   const list = document.getElementById('guideList');
   list.innerHTML = '';
-  const sorted = [...guideData].sort((a,b)=>(a.order||999)-(b.order||999));
-  sorted.forEach(sec=>{
-    const div = document.createElement('div');
-    div.className = 'guide-section';
-    if(sec.photoUrl){
-      const img = document.createElement('img');
-      img.className='card-photo'; img.src=sec.photoUrl; img.loading='lazy';
-      img.onerror = ()=>{ img.style.display='none'; };
-      div.appendChild(img);
-    }
-    const h3 = document.createElement('h3'); h3.textContent = sec.title;
-    const p = document.createElement('p'); p.innerHTML = linkify(sec.content);
-    div.appendChild(h3); div.appendChild(p);
-    const actions = document.createElement('div'); actions.className='actions';
-    const editBtn = document.createElement('button');
-    editBtn.className='link-edit'; editBtn.textContent='✏ עריכה';
-    editBtn.onclick = ()=>openSectionModal(sec);
-    actions.appendChild(editBtn);
-    const delBtn = document.createElement('button');
-    delBtn.className='link-del'; delBtn.textContent='🗑 מחיקה';
-    delBtn.onclick = ()=>{
-      if(confirm('למחוק את הסעיף "'+sec.title+'"?')) deleteDoc(doc(db,'guide',sec.id));
-    };
-    actions.appendChild(delBtn);
-    div.appendChild(actions);
-    list.appendChild(div);
+  renderGuideCategoryFilter();
+  renderCategoryOptions();
+
+  const filterCat = document.getElementById('guideCategoryFilter').value;
+  const grouped = {};
+  const order = [];
+  [...guideData]
+    .sort((a,b)=>(a.order||999)-(b.order||999))
+    .forEach(sec=>{
+      const cat = guideCategory(sec);
+      if(filterCat!=='all' && cat!==filterCat) return;
+      if(!grouped[cat]){ grouped[cat]=[]; order.push(cat); }
+      grouped[cat].push(sec);
+    });
+
+  if(order.length===0){
+    list.innerHTML = '<div class="empty-msg">אין סעיפים להצגה</div>';
+    return;
+  }
+
+  order.sort((a,b)=>a.localeCompare(b,'he')).forEach(cat=>{
+    const title = document.createElement('div');
+    title.className = 'guide-cat-title';
+    title.innerHTML = '<span>'+escapeHtml(cat)+'</span><span class="count">'+grouped[cat].length+' סעיפים</span>';
+    list.appendChild(title);
+    grouped[cat].forEach(sec=>list.appendChild(renderGuideSection(sec)));
   });
 }
 
 function openSectionModal(sec){
   document.getElementById('sectionModalTitle').textContent = sec ? 'עריכת סעיף' : 'סעיף חדש';
   document.getElementById('s_id').value = sec ? sec.id : '';
+  renderCategoryOptions();
+  const activeFilter = document.getElementById('guideCategoryFilter').value;
+  document.getElementById('s_category').value = sec
+    ? guideCategory(sec)
+    : (activeFilter && activeFilter!=='all' ? activeFilter : '');
   document.getElementById('s_title').value = sec ? sec.title : '';
   document.getElementById('s_photo').value = sec ? (sec.photoUrl||'') : '';
   document.getElementById('s_content').value = sec ? sec.content : '';
+  document.getElementById('sectionUploadStatus').textContent = '';
   previewSectionImg();
   document.getElementById('sectionBackdrop').classList.add('open');
 }
@@ -421,7 +898,7 @@ async function ensureSeeded(){
 }
 
 function mapsUrl(item){
-  if(item.mapLink && item.mapLink.trim()) return item.mapLink.trim();
+  if(item.mapLink && item.mapLink.trim()) return normalizeLinkUrl(item.mapLink);
   return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.address||'');
 }
 function telUrl(phone){
@@ -524,7 +1001,9 @@ function renderCard(item){
   if(item.photoUrl){
     const thumb = document.createElement('img');
     thumb.className='card-thumb'; thumb.src=item.photoUrl; thumb.loading='lazy';
+    thumb.style.cursor='zoom-in';
     thumb.onerror = ()=>{ thumb.style.display='none'; };
+    thumb.onclick = ()=>openLightbox(item.photoUrl);
     nameRow.appendChild(thumb);
   }
   const name = document.createElement('div');
@@ -656,12 +1135,16 @@ function renderCard(item){
     a.textContent = '☎ חיוג';
     actions.appendChild(a);
   }
-  if(item.websiteUrl){
+  getPointLinks(item).forEach((link)=>{
     const a = document.createElement('a');
-    a.href = item.websiteUrl; a.target='_blank'; a.className='btn-link';
-    a.textContent = '🌐 אתר עם הסברים';
+    a.href = link.url; a.target='_blank'; a.rel='noopener noreferrer'; a.className='btn-link';
+    a.textContent = '🌐 ' + link.title;
+    a.onclick = (event)=>{
+      event.preventDefault();
+      window.open(link.url, '_blank', 'noopener,noreferrer');
+    };
     actions.appendChild(a);
-  }
+  });
   const editBtn = document.createElement('button');
   editBtn.className='link-edit'; editBtn.textContent='✏ עריכה';
   editBtn.onclick = ()=>openModal(item);
@@ -695,7 +1178,7 @@ function openModal(item){
   document.getElementById('f_place').value = item ? item.place : '';
   document.getElementById('f_address').value = item ? item.address : '';
   document.getElementById('f_maplink').value = item ? (item.mapLink||'') : '';
-  document.getElementById('f_website').value = item ? (item.websiteUrl||'') : '';
+  fillLinksEditor(getPointLinks(item));
   document.getElementById('f_photo').value = item ? (item.photoUrl||'') : '';
   document.getElementById('f_phone').value = item ? item.phone||'' : '';
   document.getElementById('f_notes').value = item ? item.notes||'' : '';
@@ -726,27 +1209,34 @@ document.getElementById('saveBtn').onclick = async ()=>{
   const id = document.getElementById('editId').value;
   const place = document.getElementById('f_place').value.trim();
   if(!place){ alert('יש להזין שם מקום'); return; }
+  const links = readLinksFromEditor();
   const obj = {
     day: document.getElementById('f_day').value.trim() || 'ללא יום',
     date: document.getElementById('f_date').value.trim(),
     time: document.getElementById('f_time').value.trim(),
     place: place,
     address: document.getElementById('f_address').value.trim(),
-    mapLink: document.getElementById('f_maplink').value.trim(),
-    websiteUrl: document.getElementById('f_website').value.trim(),
+    mapLink: normalizeLinkUrl(document.getElementById('f_maplink').value.trim()),
+    links,
+    websiteUrl: links[0]?.url || '',
     photoUrl: driveUrlToImg(document.getElementById('f_photo').value.trim()),
     phone: document.getElementById('f_phone').value.trim(),
     notes: document.getElementById('f_notes').value.trim(),
     desc: document.getElementById('f_desc').value.trim(),
     cost: document.getElementById('f_cost').value.trim() || '-'
   };
-  if(id){
-    await updateDoc(doc(db,'points',id), obj);
-  } else {
-    obj.done = false;
-    await addDoc(pointsRef, obj);
+  try{
+    if(id){
+      await updateDoc(doc(db,'points',id), obj);
+    } else {
+      obj.done = false;
+      await addDoc(pointsRef, obj);
+    }
+    closeModal();
+  }catch(error){
+    console.error(error);
+    alert('השמירה נכשלה: ' + (error.message || error));
   }
-  closeModal();
 };
 
 document.getElementById('dayFilter').onchange = render;
@@ -910,6 +1400,37 @@ async function renderMapMarkers(filterDay){
   setTimeout(()=>leafletMap.invalidateSize(),100);
 }
 
+let locationMarker = null, locationCircle = null, locationWatchId = null, locationCentered = false;
+
+function locateMe(){
+  if(!leafletMap) return;
+  const status = document.getElementById('mapStatus');
+  if(!navigator.geolocation){ status.textContent = 'הדפדפן לא תומך באיתור מיקום'; return; }
+  status.textContent = 'מאתר את המיקום שלך...';
+  locationCentered = false;
+  if(locationWatchId !== null) navigator.geolocation.clearWatch(locationWatchId);
+  locationWatchId = navigator.geolocation.watchPosition(pos=>{
+    const {latitude, longitude, accuracy} = pos.coords;
+    const latlng = [latitude, longitude];
+    if(locationMarker){
+      locationMarker.setLatLng(latlng);
+    } else {
+      const icon = L.divIcon({className:'', html:'<div class="my-location-dot"></div>', iconSize:[22,22], iconAnchor:[11,11]});
+      locationMarker = L.marker(latlng, {icon, zIndexOffset:1000}).bindPopup('אתה כאן').addTo(leafletMap);
+    }
+    if(locationCircle){
+      locationCircle.setLatLng(latlng).setRadius(accuracy);
+    } else {
+      locationCircle = L.circle(latlng, {radius:accuracy, color:'#2c7ab2', fillColor:'#2c7ab2', fillOpacity:0.12, weight:1}).addTo(leafletMap);
+    }
+    if(!locationCentered){ leafletMap.setView(latlng, 15); locationCentered = true; }
+    status.textContent = `המיקום שלך מסומן (דיוק בערך ${Math.round(accuracy)} מטר)`;
+  }, err=>{
+    const messages = {1:'הגישה למיקום נדחתה. אפשר לאשר הרשאת מיקום בהגדרות הדפדפן.', 2:'לא ניתן לאתר את המיקום כרגע.', 3:'האיתור ארך יותר מדי, נסה שוב.'};
+    status.textContent = messages[err.code] || 'שגיאה באיתור מיקום';
+  }, {enableHighAccuracy:true, maximumAge:10000, timeout:15000});
+}
+
 const WIKI_SUMMARIES = {
   '68 Fukusa Yabunouchicho Fushimi Ward Kyoto Japan': 'מקדש שינטו מפורסם בקיוטו המוביל לפסגת ההר דרך אלפי שערי טוריי כתומים — מהמקומות הצילומיים המרהיבים ביותר ביפן.',
   '15 Chome 778 Honmachi Higashiyama Ward Kyoto Japan': 'מתחם מקדש זן ענק מהמאה ה-13, מפורסם בגשר הפנורמי המשקיף על יערות מייפל בוערים בצבעי כתום ואדום בסתיו.',
@@ -994,25 +1515,31 @@ document.getElementById('mapBtn').onclick = openMap;
 document.getElementById('mapCloseBtn').onclick = ()=>{
   document.getElementById('mapScreen').classList.remove('open');
 };
+document.getElementById('locateBtn').onclick = locateMe;
 
 function hideSplash(){
   const splash = document.getElementById('splash');
   if(splash){ splash.style.opacity='0'; setTimeout(()=>splash.remove(), 650); }
 }
 
-onSnapshot(pointsRef, (snap)=>{
-  data = snap.docs.map(d=>({id:d.id, ...d.data()}));
-  render();
-  hideSplash();
-}, (err)=>{
-  hideSplash();
-  document.getElementById('stats').innerHTML = '<span class="sync-badge sync-bad">⚠ שגיאת חיבור</span> ' + err.message;
-});
+function startSync(){
+  onSnapshot(pointsRef, (snap)=>{
+    data = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    render();
+    hideSplash();
+  }, (err)=>{
+    hideSplash();
+    document.getElementById('stats').innerHTML = '<span class="sync-badge sync-bad">⚠ שגיאת חיבור</span> ' + err.message;
+  });
 
-onSnapshot(guideRef, (snap)=>{
-  guideData = snap.docs.map(d=>({id:d.id, ...d.data()}));
-  renderGuide();
-});
+  onSnapshot(guideRef, (snap)=>{
+    guideData = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderGuide();
+  });
+
+  ensureSeeded();
+  ensureGuideSeeded();
+}
 
 document.getElementById('guideBtn').onclick = ()=>document.getElementById('guideBackdrop').classList.add('open');
 document.getElementById('guideCloseBtn').onclick = ()=>document.getElementById('guideBackdrop').classList.remove('open');
@@ -1024,20 +1551,32 @@ document.getElementById('sectionBackdrop').onclick = (e)=>{ if(e.target.id==='se
 document.getElementById('sectionSaveBtn').onclick = async ()=>{
   const id = document.getElementById('s_id').value;
   const title = document.getElementById('s_title').value.trim();
+  const category = document.getElementById('s_category').value.trim() || DEFAULT_CATEGORY;
   const photoUrl = document.getElementById('s_photo').value.trim();
   const content = document.getElementById('s_content').value.trim();
   if(!title){ alert('יש להזין כותרת'); return; }
   if(id){
-    await updateDoc(doc(db,'guide',id), {title, photoUrl, content});
+    await updateDoc(doc(db,'guide',id), {title, category, photoUrl, content});
   } else {
     const maxOrder = guideData.reduce((m,s)=>Math.max(m, s.order||0), 0);
-    await addDoc(guideRef, {title, photoUrl, content, order: maxOrder+1});
+    await addDoc(guideRef, {title, category, photoUrl, content, order: maxOrder+1});
   }
   document.getElementById('sectionBackdrop').classList.remove('open');
 };
 
-ensureSeeded();
-ensureGuideSeeded();
+document.getElementById('guideCategoryFilter').onchange = renderGuide;
+
+let syncStarted = false;
+onAuthStateChanged(auth, (user)=>{
+  if(!user || syncStarted) return;
+  syncStarted = true;
+  startSync();
+});
+
+signInAnonymously(auth).catch((err)=>{
+  hideSplash();
+  document.getElementById('stats').innerHTML = '<span class="sync-badge sync-bad">⚠ שגיאת התחברות</span> ' + err.code;
+});
 </script>
 </body>
 </html>
