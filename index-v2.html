@@ -1,0 +1,2272 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>המסלול שלי ביפן - גרסה 2</title>
+<link rel="manifest" href="manifest-v2.json">
+<meta name="theme-color" content="#b23a2e">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="יפן V2">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root{
+    --bg:#fffaf0;
+    --surface:#ffffff;
+    --surface-soft:#f6ecd8;
+    --text:#241f1a;
+    --muted:#62594c;
+    --accent:#b23a2e;
+    --accent-strong:#8f2f25;
+    --accent-soft:#fde8e3;
+    --blue:#23577f;
+    --blue-soft:#e7f0f8;
+    --green:#2f6133;
+    --green-soft:#e6f2df;
+    --border:#ead8b8;
+    --shadow:0 4px 14px rgba(80,54,20,0.09);
+    --radius:14px;
+    --tap:42px;
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html{font-size:16px;scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:"Segoe UI",Arial,sans-serif;
+    background:
+      radial-gradient(circle at top right, rgba(178,58,46,0.14), transparent 34rem),
+      linear-gradient(180deg,#fffaf0 0%,#f9efd9 100%);
+    color:var(--text);
+    line-height:1.55;
+    padding-bottom:calc(82px + env(safe-area-inset-bottom));
+  }
+
+  button,input,select,textarea{
+    font:inherit;
+    color:inherit;
+    border-radius:10px;
+    border:1px solid var(--border);
+  }
+
+  button{
+    min-height:var(--tap);
+    cursor:pointer;
+    background:var(--surface-soft);
+    padding:8px 12px;
+    font-weight:700;
+  }
+
+  input,select,textarea{
+    width:100%;
+    min-height:var(--tap);
+    background:#fffdf8;
+    padding:10px 12px;
+  }
+
+  textarea{resize:vertical;}
+
+  .app-header{
+    position:sticky;
+    top:0;
+    z-index:20;
+    padding:calc(14px + env(safe-area-inset-top)) 16px 14px;
+    background:rgba(246,236,216,0.96);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--border);
+    border-radius:0 0 18px 18px;
+    box-shadow:0 4px 18px rgba(70,50,20,0.08);
+  }
+
+  .hero{
+    max-width:820px;
+    margin:0 auto;
+  }
+
+  .eyebrow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    color:var(--muted);
+    font-size:0.88rem;
+    margin-bottom:4px;
+  }
+
+  h1{
+    margin:0;
+    font-size:1.32rem;
+    line-height:1.22;
+    letter-spacing:-0.02em;
+  }
+
+  .sync-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    min-height:30px;
+    border-radius:999px;
+    padding:4px 10px;
+    font-size:0.82rem;
+    font-weight:800;
+    background:var(--green-soft);
+    color:var(--green);
+    white-space:nowrap;
+  }
+
+  .sync-badge.error{
+    background:var(--accent-soft);
+    color:var(--accent-strong);
+  }
+
+  .filters{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+    max-width:820px;
+    margin:10px auto 0;
+  }
+
+  .filter-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .stats{
+    color:var(--muted);
+    font-size:0.92rem;
+  }
+
+  main{
+    width:min(100%,820px);
+    margin:0 auto;
+    padding:16px;
+  }
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .day-group{margin-bottom:24px;}
+
+  .day-title{
+    position:sticky;
+    top:144px;
+    z-index:8;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin:18px 0 10px;
+    padding:10px 12px;
+    color:var(--accent-strong);
+    background:rgba(255,250,240,0.92);
+    backdrop-filter:blur(10px);
+    border:1px solid var(--border);
+    border-radius:999px;
+    font-size:1.02rem;
+    font-weight:900;
+  }
+
+  .day-count{
+    color:var(--muted);
+    font-size:0.84rem;
+    font-weight:800;
+  }
+
+  .card{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:13px;
+    margin-bottom:11px;
+    overflow:hidden;
+  }
+
+  .card.done{
+    background:#f6f1e7;
+  }
+
+  .card.done .card-name,
+  .card.done .card-notes{
+    opacity:0.64;
+  }
+
+  .card-photo{
+    width:100%;
+    max-height:220px;
+    object-fit:cover;
+    border-radius:12px;
+    margin-bottom:12px;
+    background:var(--surface-soft);
+  }
+
+  .card-main{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:14px;
+    align-items:start;
+  }
+
+  .time-chip{
+    display:inline-flex;
+    align-items:center;
+    min-height:36px;
+    padding:5px 12px;
+    border-radius:999px;
+    background:var(--blue-soft);
+    color:var(--blue);
+    font-size:0.94rem;
+    font-weight:900;
+    white-space:nowrap;
+  }
+
+  .card-name{
+    margin:10px 0 4px;
+    font-size:1.08rem;
+    line-height:1.32;
+    font-weight:900;
+  }
+
+  .card-notes,
+  .wiki-summary,
+  .card-desc,
+  .guide-card p{
+    font-size:1rem;
+  }
+
+  .card-notes{color:var(--muted);margin:6px 0;}
+
+  .wiki-summary{
+    color:#5d4a20;
+    background:#fff6df;
+    border:1px solid #f1dda8;
+    border-radius:14px;
+    padding:10px 12px;
+    margin:10px 0;
+  }
+
+  .resto-btn{
+    min-height:38px;
+    margin-top:10px;
+    padding:7px 12px;
+    border-radius:999px;
+    background:#fff3e0;
+    border:1px solid #e8c88a;
+    color:#6f4a00;
+    font-size:0.92rem;
+  }
+
+  .resto-panel{
+    display:none;
+    margin-top:8px;
+    padding:11px 12px;
+    border-radius:12px;
+    border:1px solid #e8c88a;
+    background:#fff8ef;
+    color:#3f3322;
+    font-size:0.94rem;
+    line-height:1.65;
+  }
+
+  .resto-panel.open{display:block;}
+  .resto-panel strong{display:block;color:#6f4a00;margin-top:8px;}
+  .resto-panel strong:first-child{margin-top:0;}
+
+  .resto-tip{
+    margin-top:8px;
+    padding:7px 9px;
+    border-radius:10px;
+    background:#ffecc7;
+    color:#594300;
+  }
+
+  .check-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    color:var(--muted);
+    font-size:0.78rem;
+    font-weight:800;
+  }
+
+  .check-wrap input{
+    width:30px;
+    height:30px;
+    min-height:30px;
+    accent-color:var(--green);
+  }
+
+  .pills{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:12px 0 0;
+  }
+
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    min-height:30px;
+    border-radius:999px;
+    padding:5px 10px;
+    color:var(--muted);
+    background:var(--surface-soft);
+    font-size:0.88rem;
+    font-weight:800;
+  }
+
+  .actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:14px;
+  }
+
+  .actions a,
+  .actions button,
+  .file-button{
+    min-height:var(--tap);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    text-decoration:none;
+    border-radius:10px;
+    border:1px solid var(--border);
+    padding:8px 10px;
+    font-weight:800;
+  }
+
+  .primary-action{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+
+  .map-action{
+    background:var(--blue-soft);
+    color:var(--blue);
+    border-color:#c6dced;
+  }
+
+  .soft-action{
+    background:var(--surface-soft);
+    color:var(--text);
+  }
+
+  .danger-note{
+    border:1px solid #efc7bf;
+    background:#fff1ee;
+    color:#723226;
+    border-radius:12px;
+    padding:12px;
+    font-size:0.94rem;
+  }
+
+  .details{
+    margin-top:12px;
+  }
+
+  .details summary{
+    min-height:44px;
+    display:flex;
+    align-items:center;
+    color:var(--blue);
+    font-weight:900;
+    cursor:pointer;
+  }
+
+  .card-desc{
+    color:var(--text);
+    background:#fbf3e4;
+    border-radius:14px;
+    padding:12px;
+    margin:4px 0 10px;
+    white-space:pre-wrap;
+  }
+
+  .stars-row{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:5px;
+    margin:10px 0 4px;
+  }
+
+  .star{
+    width:40px;
+    height:40px;
+    min-height:40px;
+    padding:0;
+    border:0;
+    background:transparent;
+    color:#c9bda7;
+    font-size:1.55rem;
+    line-height:1;
+  }
+
+  .star.filled{color:#e29a1a;}
+
+  .note-box{
+    margin-top:10px;
+    display:grid;
+    gap:8px;
+  }
+
+  .empty{
+    margin:44px 0;
+    text-align:center;
+    color:var(--muted);
+    font-size:1.08rem;
+  }
+
+  .guide-card,
+  .tool-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:13px;
+    margin-bottom:11px;
+  }
+
+  .guide-card h2,
+  .tool-card h2{
+    margin:0 0 8px;
+    font-size:1.16rem;
+  }
+
+  .guide-card p{
+    margin:0;
+    color:var(--text);
+    white-space:pre-wrap;
+  }
+
+  .guide-card a{color:var(--blue);font-weight:800;}
+
+  .guide-toolbar{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:10px;
+    align-items:center;
+    margin-top:10px;
+  }
+
+  .cat-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin:18px 0 10px;
+    padding:9px 14px;
+    color:var(--accent-strong);
+    background:var(--surface-soft);
+    border:1px solid var(--border);
+    border-radius:999px;
+    font-size:1.02rem;
+    font-weight:900;
+  }
+
+  .cat-title .count{
+    color:var(--muted);
+    font-size:0.82rem;
+    font-weight:800;
+  }
+
+  .bottom-nav{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:30;
+    padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+    background:rgba(255,253,248,0.96);
+    border-top:1px solid var(--border);
+    backdrop-filter:blur(16px);
+  }
+
+  .bottom-nav-inner{
+    width:min(100%,820px);
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:6px;
+  }
+
+  .nav-btn{
+    min-height:50px;
+    padding:7px 4px;
+    background:transparent;
+    border:0;
+    color:var(--muted);
+    border-radius:12px;
+    font-size:0.86rem;
+  }
+
+  .nav-btn.active{
+    background:var(--accent-soft);
+    color:var(--accent-strong);
+  }
+
+  .nav-btn span{
+    display:block;
+    font-size:1.12rem;
+    line-height:1.1;
+  }
+
+  .modal-backdrop{
+    position:fixed;
+    inset:0;
+    z-index:60;
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    background:rgba(20,14,8,0.55);
+  }
+
+  .modal-backdrop.open{display:flex;}
+
+  .modal{
+    width:100%;
+    max-width:620px;
+    max-height:88vh;
+    overflow:auto;
+    background:var(--surface);
+    border-radius:18px 18px 0 0;
+    padding:18px 16px calc(18px + env(safe-area-inset-bottom));
+    box-shadow:0 -10px 26px rgba(0,0,0,0.18);
+  }
+
+  .modal h2{
+    margin:0 0 12px;
+    font-size:1.28rem;
+  }
+
+  .field{
+    margin-bottom:12px;
+  }
+
+  .field label{
+    display:block;
+    margin-bottom:5px;
+    color:var(--muted);
+    font-size:0.92rem;
+    font-weight:900;
+  }
+
+  .modal-actions{
+    position:sticky;
+    bottom:0;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:16px;
+    padding-top:12px;
+    background:var(--surface);
+  }
+
+  .wide{grid-column:1 / -1;}
+
+  .muted-text{
+    color:var(--muted);
+    font-size:0.94rem;
+    margin:0 0 10px;
+  }
+
+  .img-preview{
+    max-width:100%;
+    max-height:140px;
+    display:none;
+    border-radius:12px;
+    margin-top:8px;
+  }
+
+  .map-toolbar{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+    margin-bottom:12px;
+  }
+
+  #mapEl{
+    width:100%;
+    height:62vh;
+    min-height:420px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    background:var(--surface-soft);
+  }
+
+  .map-status{
+    color:var(--muted);
+    font-size:0.92rem;
+    margin-top:8px;
+  }
+
+  .my-location-dot{
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:#2c7ab2;
+    border:3px solid #fff;
+    box-shadow:0 0 0 0 rgba(44,122,178,0.5);
+    animation:locPulse 1.8s infinite;
+  }
+
+  @keyframes locPulse{
+    0%{box-shadow:0 0 0 0 rgba(44,122,178,0.45);}
+    70%{box-shadow:0 0 0 16px rgba(44,122,178,0);}
+    100%{box-shadow:0 0 0 0 rgba(44,122,178,0);}
+  }
+
+  .danger-action{
+    background:#fff1ee;
+    color:#7a2f24;
+    border-color:#efc7bf;
+  }
+
+  .loading{
+    min-height:220px;
+    display:grid;
+    place-items:center;
+    color:var(--muted);
+    font-size:1.06rem;
+  }
+
+  @media (max-width:430px){
+    html{font-size:17px;}
+    .filter-row{grid-template-columns:1fr;}
+    .actions{grid-template-columns:1fr;}
+    .day-title{top:190px;}
+    .card-main{grid-template-columns:1fr;}
+    .guide-toolbar{grid-template-columns:1fr;}
+    .check-wrap{
+      position:absolute;
+      top:14px;
+      left:14px;
+    }
+    .time-chip{margin-left:46px;}
+  }
+
+  @media (min-width:720px){
+    .filters{grid-template-columns:1.2fr 1fr;}
+    .filter-row{grid-template-columns:1fr 1fr;}
+    .modal-backdrop{align-items:center;}
+    .modal{border-radius:24px;max-height:84vh;}
+  }
+
+  .card-photo{cursor:zoom-in;}
+  .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:99999;display:none;align-items:center;justify-content:center;overflow:hidden;touch-action:none;}
+  .lightbox.open{display:flex;}
+  .lightbox img{max-width:100%;max-height:100%;transform-origin:0 0;will-change:transform;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;}
+  .lightbox-bar{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:10px;display:flex;gap:8px;z-index:2;}
+  .lightbox-btn{width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,.92);color:#111;font-size:22px;font-weight:700;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;}
+
+  .allergy-launch{width:100%;background:#b71c1c;color:#fff;border:none;border-radius:14px;padding:16px;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(183,28,28,.3);display:flex;align-items:center;justify-content:center;gap:8px;}
+  .allergy-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99998;display:none;overflow:auto;-webkit-overflow-scrolling:touch;padding:0;}
+  .allergy-modal.open{display:block;}
+  .allergy-topbar{position:sticky;top:0;z-index:2;display:flex;gap:8px;justify-content:space-between;align-items:center;background:#b71c1c;color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;}
+  .allergy-topbar button{border:none;border-radius:10px;padding:10px 14px;font-size:15px;font-weight:700;cursor:pointer;}
+  .allergy-topbar .reset{background:rgba(255,255,255,.2);color:#fff;}
+  .allergy-topbar .close{background:#fff;color:#b71c1c;}
+  .allergy-card{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#faf8f5;color:#333;padding:20px;max-width:640px;margin:0 auto;}
+  .allergy-card .header{text-align:center;border-bottom:3px solid #b71c1c;padding-bottom:15px;margin-bottom:20px;}
+  .allergy-card .title-jp{font-size:2rem;color:#b71c1c;margin:0;}
+  .allergy-card .title-he{font-size:1.2rem;margin:5px 0 0 0;color:#555;}
+  .allergy-card .message-jp{font-size:1.1rem;text-align:center;margin-bottom:20px;font-weight:bold;color:#444;}
+  .allergy-card .message-he{font-size:.95rem;color:#666;font-weight:normal;}
+  .allergy-card .allergy-table{width:100%;border-collapse:collapse;margin-bottom:25px;background:#fff;}
+  .allergy-card th,.allergy-card td{border:1px solid #e0e0e0;padding:12px 10px;text-align:right;font-size:16px;}
+  .allergy-card th{background:#f4f4f4;font-weight:bold;}
+  .allergy-card .jp-text{font-weight:bold;text-align:left;color:#b71c1c;font-size:17px;}
+  .allergy-card .checkbox{width:44px;text-align:center;font-size:1.6rem;color:#ccc;}
+  .allergy-card .section-title{background:#efefef;font-weight:bold;font-size:1.1rem;padding:8px 12px;margin-top:15px;border-right:4px solid #b71c1c;color:#333;}
+  .allergy-card .allergy-row{cursor:pointer;}
+  .allergy-card .allergy-row.checked{background:#fff0f0;}
+  .allergy-card .allergy-row.checked td{font-weight:bold;}
+  .allergy-card .allergy-row.checked .checkbox{color:#b71c1c;}
+  .links-editor{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+  .link-row{display:grid;grid-template-columns:1.6fr 1fr auto;gap:6px;align-items:center;}
+  .link-row input{margin:0;font-size:15px;padding:10px 12px;}
+  .link-row .link-url{direction:ltr;text-align:left;}
+  .link-row .link-remove{width:40px;height:40px;padding:0;border-radius:10px;border:1px solid var(--border);background:var(--card2);color:var(--danger,#c0392b);cursor:pointer;font-size:18px;}
+  @media (max-width:520px){
+    .link-row{grid-template-columns:1fr auto;}
+    .link-row .link-url{grid-column:1 / -1;}
+    .link-row .link-title{grid-column:1 / -2;}
+  }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="hero">
+    <div class="eyebrow">
+      <span>גרסה 2 - תצוגה נוחה לאייפון</span>
+      <span id="syncBadge" class="sync-badge">מתחבר...</span>
+    </div>
+    <h1>המסלול שלי ביפן</h1>
+    <div class="stats" id="stats">13.11 עד 25.11.2026</div>
+  </div>
+  <div class="filters" id="routeFilters">
+    <input id="searchBox" type="search" placeholder="חיפוש מקום, הערה או תיאור">
+    <div class="filter-row">
+      <select id="dayFilter"><option value="all">כל הימים</option></select>
+      <select id="statusFilter">
+        <option value="all">הכל</option>
+        <option value="open">רק פתוחים</option>
+        <option value="done">רק הושלמו</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="routeView" class="view active" aria-label="מסלול">
+    <div id="routeList" class="loading">טוען את המסלול...</div>
+  </section>
+
+  <section id="mapView" class="view" aria-label="מפה וניווט">
+    <div class="tool-card">
+      <h2>מפה וניווט</h2>
+      <p class="muted-text">המפה המלאה חזרה לגרסה 2. אפשר לסנן לפי יום ולפתוח ניווט לכל נקודה.</p>
+      <div class="map-toolbar">
+        <select id="mapDayFilter"><option value="all">כל הימים</option></select>
+        <button id="locateBtn" class="primary-action">📍 המיקום שלי</button>
+        <button id="refreshMapBtn" class="map-action">רענן מפה</button>
+      </div>
+      <div id="mapEl"></div>
+      <div id="mapStatus" class="map-status"></div>
+    </div>
+    <div id="mapList"></div>
+  </section>
+
+  <section id="guideView" class="view" aria-label="מדריך">
+    <div class="tool-card">
+      <h2>כרטיס העדפות מזון למסעדה</h2>
+      <p class="muted-text">סמנו את המרכיבים שאתם נמנעים מהם, והציגו את הכרטיס למלצר. הסימון נשמר במכשיר.</p>
+      <button id="allergyOpenBtn" class="allergy-launch">🍽️ פתח כרטיס העדפות מזון למסעדה</button>
+    </div>
+    <div class="tool-card">
+      <h2>מדריך לוגיסטי</h2>
+      <p class="muted-text">הסעיפים מאורגנים בקטגוריות. אפשר לסנן לפי קטגוריה, להוסיף ולערוך.</p>
+      <div class="guide-toolbar">
+        <select id="guideCategoryFilter"><option value="all">כל הקטגוריות</option></select>
+        <button id="guideAddBtn" class="map-action">+ הוסף סעיף</button>
+      </div>
+    </div>
+    <div id="guideList" class="loading">טוען מדריך...</div>
+  </section>
+
+  <section id="moreView" class="view" aria-label="עוד">
+    <div class="tool-card">
+      <h2>בטיחות גרסה 2</h2>
+      <p class="danger-note">גרסה 2 משתמשת באותו Firebase של הגרסה הקיימת. פעולות עריכה, שחזור, ניקוי כפילויות ומחיקה משפיעות על כל המשתמשים ולכן נשארו מאחורי אישור מפורש.</p>
+    </div>
+    <div class="tool-card">
+      <h2>גיבוי ושחזור</h2>
+      <p class="muted-text">גיבוי הוא קריאה בלבד. שחזור מוסיף נתונים מהקובץ למסד הנתונים המשותף.</p>
+      <div class="actions">
+        <button id="exportBtn" class="primary-action">הורד גיבוי JSON</button>
+        <label for="importFile" class="file-button map-action">שחזר מגיבוי</label>
+        <input type="file" id="importFile" accept=".json" style="display:none">
+      </div>
+    </div>
+    <div class="tool-card">
+      <h2>ניהול</h2>
+      <p class="muted-text">הוספה ועריכה נשארו זמינות. ניקוי כפילויות מוחק רשומות כפולות אחרי אישור.</p>
+      <div class="actions">
+        <button id="addBtn" class="map-action">+ הוסף נקודה</button>
+        <button id="dedupBtn" class="danger-action">נקה כפילויות</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav class="bottom-nav" aria-label="ניווט ראשי">
+  <div class="bottom-nav-inner">
+    <button class="nav-btn active" data-view="routeView"><span>🗓</span>מסלול</button>
+    <button class="nav-btn" data-view="mapView"><span>🧭</span>ניווט</button>
+    <button class="nav-btn" data-view="guideView"><span>📖</span>מדריך</button>
+    <button class="nav-btn" data-view="moreView"><span>⋯</span>עוד</button>
+  </div>
+</nav>
+
+<div class="modal-backdrop" id="pointModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <h2 id="modalTitle">נקודת עניין</h2>
+    <input type="hidden" id="f_id">
+    <div class="field"><label for="f_day">יום</label><input id="f_day" placeholder="יום 1"></div>
+    <div class="field"><label for="f_date">תאריך</label><input id="f_date" placeholder="13/11/2026"></div>
+    <div class="field"><label for="f_time">שעה</label><input id="f_time" placeholder="09:00-11:00"></div>
+    <div class="field"><label for="f_place">שם המקום</label><input id="f_place" placeholder="שם המקום"></div>
+    <div class="field"><label for="f_address">כתובת לניווט</label><input id="f_address" placeholder="Shibuya Tokyo Japan"></div>
+    <div class="field"><label for="f_maplink">קישור מפה מותאם</label><input id="f_maplink" placeholder="https://maps.google.com/..."></div>
+    <div class="field">
+      <label>קישורים לאתרים (אפשר כמה)</label>
+      <p class="muted-text" style="margin:0 0 8px;">בשדה השמאלי/התחתון מדביקים את הכתובת המלאה (כולל https). בשדה השני אפשר לכתוב שם כמו "ויקיפדיה".</p>
+      <div id="linksEditor" class="links-editor"></div>
+      <button type="button" id="addLinkBtn" class="soft-action">+ הוסף קישור</button>
+    </div>
+    <div class="field">
+      <label for="f_photo">תמונה</label>
+      <input id="f_photo" placeholder="URL או Google Drive" oninput="previewImg()">
+      <div class="actions">
+        <label for="f_photo_file" class="file-button soft-action wide">בחר תמונה מהגלריה</label>
+        <input type="file" id="f_photo_file" accept="image/*" style="display:none">
+      </div>
+      <div id="uploadStatus" class="muted-text"></div>
+      <img id="imgPreview" class="img-preview" alt="תצוגה מקדימה">
+    </div>
+    <div class="field"><label for="f_phone">טלפון</label><input id="f_phone" placeholder="+81..."></div>
+    <div class="field"><label for="f_notes">הערות קצרות</label><textarea id="f_notes" rows="2"></textarea></div>
+    <div class="field"><label for="f_desc">תיאור מורחב</label><textarea id="f_desc" rows="4"></textarea></div>
+    <div class="field"><label for="f_cost">עלות</label><input id="f_cost" placeholder="500 יין"></div>
+    <div class="modal-actions">
+      <button id="cancelBtn" class="soft-action">ביטול</button>
+      <button id="saveBtn" class="primary-action">שמירה</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="sectionModal" role="dialog" aria-modal="true" aria-labelledby="sectionModalTitle">
+  <div class="modal">
+    <h2 id="sectionModalTitle">סעיף במדריך</h2>
+    <input type="hidden" id="s_id">
+    <div class="field">
+      <label for="s_category">קטגוריה</label>
+      <input id="s_category" list="categoryOptions" placeholder="למשל: תחבורה, אוכל, קניות">
+      <datalist id="categoryOptions"></datalist>
+    </div>
+    <div class="field"><label for="s_title">כותרת הסעיף</label><input id="s_title" placeholder="לדוגמה: כרטיסי IC"></div>
+    <div class="field">
+      <label for="s_photo">תמונה</label>
+      <input id="s_photo" placeholder="URL או Google Drive" oninput="previewSectionImg()">
+      <div class="actions">
+        <label for="s_photo_file" class="file-button soft-action wide">בחר תמונה או PDF</label>
+        <input type="file" id="s_photo_file" accept="image/*,application/pdf" style="display:none">
+        <button type="button" id="s_photo_clear" class="danger-action">הסר תמונה</button>
+      </div>
+      <div id="sectionUploadStatus" class="muted-text"></div>
+      <img id="sectionImgPreview" class="img-preview" alt="תצוגה מקדימה">
+    </div>
+    <div class="field"><label for="s_content">תוכן הסעיף</label><textarea id="s_content" rows="10"></textarea></div>
+    <div class="modal-actions">
+      <button id="sectionCancelBtn" class="soft-action">ביטול</button>
+      <button id="sectionSaveBtn" class="primary-action">שמירה</button>
+    </div>
+  </div>
+</div>
+
+<div id="imgLightbox" class="lightbox" role="dialog" aria-modal="true">
+  <div class="lightbox-bar">
+    <button id="lightboxOut" class="lightbox-btn" aria-label="הקטן">−</button>
+    <button id="lightboxIn" class="lightbox-btn" aria-label="הגדל">+</button>
+    <button id="lightboxClose" class="lightbox-btn" aria-label="סגור">✕</button>
+  </div>
+  <img id="lightboxImg" alt="תצוגה מוגדלת">
+</div>
+
+<div id="allergyModal" class="allergy-modal" role="dialog" aria-modal="true" aria-label="כרטיס העדפות מזון">
+  <div class="allergy-topbar">
+    <button class="reset" id="allergyResetBtn">נקה סימונים</button>
+    <strong>כרטיס העדפות מזון</strong>
+    <button class="close" id="allergyCloseBtn">סגור ✕</button>
+  </div>
+  <div class="allergy-card" dir="rtl" id="allergyCardBody"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, writeBatch
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getAuth, signInAnonymously, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD-f_jx1-kRQGa_uvvLctRyTpTPVxspS0Q",
+  authDomain: "japan-trip-2026-b637c.firebaseapp.com",
+  projectId: "japan-trip-2026-b637c",
+  storageBucket: "japan-trip-2026-b637c.firebasestorage.app",
+  messagingSenderId: "295377097765",
+  appId: "1:295377097765:web:b9e11e01a8fecf62b1dbcc"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const pointsRef = collection(db, "points");
+const guideRef = collection(db, "guide");
+
+let points = [];
+let guide = [];
+
+const routeList = document.getElementById("routeList");
+const mapList = document.getElementById("mapList");
+const guideList = document.getElementById("guideList");
+const searchBox = document.getElementById("searchBox");
+const dayFilter = document.getElementById("dayFilter");
+const statusFilter = document.getElementById("statusFilter");
+const syncBadge = document.getElementById("syncBadge");
+const stats = document.getElementById("stats");
+const routeFilters = document.getElementById("routeFilters");
+const mapDayFilter = document.getElementById("mapDayFilter");
+const mapStatus = document.getElementById("mapStatus");
+const guideCategoryFilter = document.getElementById("guideCategoryFilter");
+
+const DEFAULT_CATEGORY = "כללי";
+const DEFAULT_GUIDE_CATEGORIES = ["כללי", "תחבורה", "כסף ותשלומים", "אוכל", "קניות", "אפליקציות שימושיות", "טיפים"];
+
+const DAY_COLORS = ["#b23a2e","#2c7ab2","#2e8b57","#8b5e2e","#6b2e8b","#2e7a8b","#8b2e6b","#5e8b2e","#2e4e8b","#8b7a2e","#2e8b7a","#8b2e2e","#4e2e8b"];
+let leafletMap = null;
+let mapMarkers = [];
+
+const WIKI_SUMMARIES = {
+  "68 Fukusa Yabunouchicho Fushimi Ward Kyoto Japan": "מקדש שינטו מפורסם בקיוטו המוביל לפסגת ההר דרך אלפי שערי טוריי כתומים.",
+  "15 Chome 778 Honmachi Higashiyama Ward Kyoto Japan": "מתחם מקדש זן ענק מהמאה ה-13, מפורסם בגשר הפנורמי המשקיף על יערות מייפל בסתיו.",
+  "Nishiki Market Nakagyo Ward Kyoto Japan": "\"המטבח של קיוטו\" - שוק אוכל צבעוני בלב העיר עם דוכנים מסורתיים וטעימות ייחודיות.",
+  "1 Chome 294 Kiyomizu Higashiyama Ward Kyoto Japan": "מקדש בודהיסטי עתיק מהמאה ה-8 הניצב על במת עץ ענקית ומשקיף על קיוטו.",
+  "Kurama dera Sakyo Ward Kyoto Japan": "מקדש עתיק ומסתורי בהרי הצפון של קיוטו, עם שביל טרק דרך יערות ארזים ושורשי עצים.",
+  "180 Kuramakibunacho Sakyo Ward Kyoto Japan": "כפר הרים קסום בעמק ירוק ליד קוראמה, מפורסם במקדש קיבונה ובפנסי האבן.",
+  "Pontocho Kyoto Japan": "סמטה צרה ומוארת פנסים לאורך נהר הקאמו בקיוטו, עם מסעדות, בתי גיישות ובארים.",
+  "68 Sagaogurayama Tabuchicho Ukyo Ward Kyoto Japan": "יער הבמבוק האייקוני ומקדש טנריו-ג'י לצידו - חוויית חובה באראשיימה.",
+  "32 Sagatoriimoto Kozachicho Ukyo Ward Kyoto Japan": "מקדש בודהיסטי שקט ביערות אראשיימה, מכוסה טחב ירוק ומייפלים אדומים.",
+  "Adashino Nenbutsu ji Ukyo Ward Kyoto Japan": "מקדש קדום בשולי אראשיימה המכיל אלפי פסלוני אבן קדושים.",
+  "Togetsukyo Bridge Arashiyama Kyoto Japan": "גשר אייקוני על נהר הקאטסורה ונקודת תצפית יפה על הרי אראשיימה.",
+  "61 Sagaichikawa Mankijicho Nishikyo Ward Kyoto Japan": "פארק קופים על פסגת הר אראשיימה עם תצפית פנורמית על קיוטו.",
+  "1-1 Osakajo Chuo Ward Osaka Japan": "טירת אוסקה המוקפת חפיר ויערות עצים - סמל היסטורי של העיר.",
+  "2 Chome 4-1 Nippombashi Chuo Ward Osaka Japan": "\"מטבח אוסקה\" - שוק מזון היסטורי עם דוכני ים, בשר ומאכלים מקומיים.",
+  "Sennichimae Doguyasuji Shopping Street Osaka Japan": "רחוב ציוד המסעדות של אוסקה: סכיני שף, כלי מטבח ודגמי אוכל מפלסטיק.",
+  "Dotonbori Chuo Ward Osaka Japan": "הלב הפועם של אוסקה - תעלה, שלטי ניאון ודוכני אוכל שוקקים.",
+  "Kyoto Station Japan": "תחנת קיוטו - נקודת יציאה מרכזית לשינקנסן ולתחבורה העירונית.",
+  "2 Chome 3-1 Asakusa Taito City Tokyo Japan": "המקדש הבודהיסטי העתיק ביותר בטוקיו, עם שער קמינארימון ורחוב נאקאמיסה.",
+  "2 Chome 24-12 Shibuya Tokyo Japan": "שיבויה סקיי - תצפית גג פתוחה עם נוף 360 מעלות על טוקיו וצומת שיבויה.",
+  "Nonbei Yokocho Shibuya Tokyo Japan": "סמטת בארים קטנים בסגנון ישן-יפני ליד שיבויה.",
+  "Mount Takao Hachioji Tokyo Japan": "הר טאקאו - טיול יום פופולרי מטוקיו עם מקדש ותצפית להר פוג'י ביום צלול.",
+  "Keio Takaosan Onsen Gokurakuyu Hachioji Tokyo Japan": "אונסן מודרני ליד תחנת הרכבת, מתאים לסיום יום טרק.",
+  "1-1 Yoyogikamizonocho Shibuya City Tokyo Japan": "מקדש מייג'י מוקף יער עירוני שלו בלב טוקיו.",
+  "Takeshita Street Harajuku Tokyo Japan": "רחוב טקשיטה - לב תרבות הפופ ואופנת הרחוב של הראג'וקו.",
+  "11 Naitomachi Shinjuku City Tokyo Japan": "פארק שינג'וקו גיואן משלב גנים יפניים, צרפתיים ואנגליים וצבעי שלכת יפים.",
+  "Omoide Yokocho Shinjuku Tokyo Japan": "אומוידה יוקוצ'ו וקאבוקיצ'ו - סמטאות אוכל ובידור ערב בשינג'וקו.",
+  "Kencho ji Temple Kamakura Japan": "מקדש הזן הוותיק ביותר בקמאקורה, עם גנים ושבילי הליכה.",
+  "4 Chome 2-28 Hase Kamakura Japan": "הבודהה הגדול - פסל ברונזה אייקוני מהמאה ה-13.",
+  "3 Chome 11-2 Hase Kamakura Japan": "מקדש האסה-דרה עם גנים ותצפית על מפרץ סגמי.",
+  "Komachi dori Kamakura Japan": "רחוב אוכל ומזכרות מרכזי בקמאקורה המוביל למקדש צורוגאוקה.",
+  "4 Chome Fukuzumi Chuo City Tokyo Japan": "שוק הדגים החיצוני טסוקיג'י - מקום מעולה לאוכל ים וסושי בוקר.",
+  "6 Chome 1-16 Toyosu Koto City Tokyo Japan": "מוזיאון דיגיטלי אימרסיבי שבו נכנסים לתוך יצירות אמנות חיות.",
+  "1-1 Kanda Hanaokacho Chiyoda City Tokyo Japan": "אקיהברה - שכונת אלקטרוניקה, אנימה ומשחקי רטרו.",
+  "Ginza Chuo City Tokyo Japan": "גינזה - רובע יוקרתי עם מסעדות, חנויות בוטיק וסושי מצוין.",
+  "Okutama Tokyo Japan": "אוקוטאמה - טבע פראי של טוקיו עם שבילי טרק, יערות וכפרים נסתרים.",
+  "Lake Okutama Tokyo Japan": "אגם אוקוטאמה - מקום מנוחה ירוק ושלו אחרי טרק.",
+  "1-1 Kasumigaokacho Shinjuku City Tokyo Japan": "שדרת הגינקו הזהובה של מייג'י גאיין, ממראות הסתיו היפים בטוקיו.",
+  "Kappabashi Tokyo Japan": "רחוב המטבח של טוקיו: סכיני שף, כלים ודגמי אוכל מפלסטיק.",
+  "6 Chome 9-5 Ginza Chuo City Tokyo Japan": "יוניקלו גינזה וגינזה סיקס - קניות, עיצוב וגן גג.",
+  "Daiba Minato City Tokyo Japan": "אודאיבה - אי מלאכותי במפרץ טוקיו עם גשר הקשת, גנדאם ונוף לעיר.",
+  "Ueno Taito City Tokyo Japan": "שוק אמיצ'ו ליד אואנו, עם חנויות אוכל, ממתקים ובגדים."
+};
+
+const RESTAURANT_TIPS = {
+  "Pontocho Kyoto Japan": {
+    title: "מסעדות בסמטת פונטוצ'ו",
+    items: [
+      {name:"Pontocho Robin", desc:"מסעדה קלאסית במבנה עץ עתיק - סושי ומנות קיוטו עונתיות."},
+      {name:"Wagyu Ryotei Bungo Gion", desc:"וואגיו פרימיום באווירה אינטימית ויוקרתית."},
+      {name:"Kichi Kichi Omurice", desc:"אומורייס אגדי ומופע הכנה תיאטרלי של השף."}
+    ],
+    tip:"הסמטה יפה במיוחד בערב עם פנסי נייר אדומים."
+  },
+  "4 Chome Fukuzumi Chuo City Tokyo Japan": {
+    title:"אוכל בשוק טסוקיג'י",
+    items:[
+      {name:"דוכני סושי טרי", desc:"סושי בוקר טרי מדוכני השוק."},
+      {name:"Tamagoyaki", desc:"חביתה יפנית מתקתקה וחמה על שיפוד."}
+    ],
+    tip:"כדאי להגיע מוקדם, לפני שהדוכנים הטובים נגמרים."
+  },
+  "1-1 Kanda Hanaokacho Chiyoda City Tokyo Japan": {
+    title:"אוכל באקיהברה",
+    items:[
+      {name:"קומת המסעדות - Yodobashi Akiba", desc:"מתחם אוכל נוח עם ראמן, דונבורי, קארי ועוד."}
+    ],
+    tip:"נוח לעצור אחרי סיור בחנויות האלקטרוניקה והאנימה."
+  },
+  "Dotonbori Chuo Ward Osaka Japan": {
+    title:"אוכל בדוטונבורי",
+    items:[
+      {name:"אוקונומיאקי", desc:"חביתית כרוב עשירה שמכינים על פלנצ'ה מול העיניים."},
+      {name:"Ichiran Ramen", desc:"ראמן בתאים אישיים וחוויית הזמנה יפנית ייחודית."}
+    ],
+    tip:"הגיעו בלילה - הניאון והתעלה מרשימים במיוחד."
+  }
+};
+
+function dayNum(day){
+  const m = String(day || "").match(/\d+/);
+  return m ? parseInt(m[0], 10) : 9999;
+}
+
+function timeNum(time){
+  const m = String(time || "").match(/(\d{1,2}):(\d{2})/);
+  return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : 9999;
+}
+
+function driveUrlToImg(url){
+  if(!url) return "";
+  const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if(m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w2000`;
+  const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if(m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w2000`;
+  return url;
+}
+
+function resizeImageToBase64(file, maxPx=420, quality=0.76){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (event)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const width = Math.round(img.width * scale);
+        const height = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = event.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+let pdfjsPromise = null;
+function loadPdfJs(){
+  if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if(pdfjsPromise) return pdfjsPromise;
+  pdfjsPromise = new Promise((resolve, reject)=>{
+    const script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    script.onload = ()=>{
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      resolve(window.pdfjsLib);
+    };
+    script.onerror = ()=>reject(new Error("טעינת מנוע PDF נכשלה"));
+    document.head.appendChild(script);
+  });
+  return pdfjsPromise;
+}
+
+function compressCanvasToJpeg(canvas, limit=980000){
+  let quality = 0.92;
+  let data = canvas.toDataURL("image/jpeg", quality);
+  while(data.length > limit && quality > 0.4){
+    quality -= 0.1;
+    data = canvas.toDataURL("image/jpeg", quality);
+  }
+  let scale = 0.85;
+  while(data.length > limit && scale > 0.3){
+    const tmp = document.createElement("canvas");
+    tmp.width = Math.max(1, Math.round(canvas.width * scale));
+    tmp.height = Math.max(1, Math.round(canvas.height * scale));
+    tmp.getContext("2d").drawImage(canvas, 0, 0, tmp.width, tmp.height);
+    data = tmp.toDataURL("image/jpeg", 0.6);
+    scale -= 0.15;
+  }
+  return data;
+}
+
+async function pdfToImageBase64(file, maxWidth=2200){
+  const pdfjsLib = await loadPdfJs();
+  const data = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data}).promise;
+  const canvases = [];
+  let totalHeight = 0;
+  let targetWidth = 0;
+  for(let i=1; i<=pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const baseViewport = page.getViewport({scale:1});
+    const scale = Math.min(4, maxWidth / baseViewport.width);
+    const viewport = page.getViewport({scale});
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(viewport.width);
+    canvas.height = Math.round(viewport.height);
+    await page.render({canvasContext:canvas.getContext("2d"), viewport}).promise;
+    canvases.push(canvas);
+    totalHeight += canvas.height;
+    targetWidth = Math.max(targetWidth, canvas.width);
+  }
+  const MAX_DIM = 4000;
+  const fit = Math.min(1, MAX_DIM / targetWidth, MAX_DIM / totalHeight);
+  const out = document.createElement("canvas");
+  out.width = Math.round(targetWidth * fit);
+  out.height = Math.round(totalHeight * fit);
+  const ctx = out.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, out.width, out.height);
+  let y = 0;
+  for(const c of canvases){
+    const w = Math.round(c.width * fit);
+    const h = Math.round(c.height * fit);
+    ctx.drawImage(c, 0, y, w, h);
+    y += h;
+  }
+  return compressCanvasToJpeg(out);
+}
+
+function setupLightbox(){
+  const box = document.getElementById("imgLightbox");
+  const img = document.getElementById("lightboxImg");
+  let scale = 1, tx = 0, ty = 0;
+  const clamp = (v, lo, hi)=>Math.min(hi, Math.max(lo, v));
+  function apply(){ img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`; }
+  function reset(){ scale = 1; tx = 0; ty = 0; apply(); }
+  window.openLightbox = function(src){ if(!src) return; img.src = src; box.classList.add("open"); reset(); };
+  function close(){ box.classList.remove("open"); img.removeAttribute("src"); }
+  document.getElementById("lightboxClose").onclick = close;
+  document.getElementById("lightboxIn").onclick = ()=>{ scale = clamp(scale * 1.4, 1, 8); apply(); };
+  document.getElementById("lightboxOut").onclick = ()=>{ scale = clamp(scale / 1.4, 1, 8); if(scale === 1){ tx = 0; ty = 0; } apply(); };
+  box.addEventListener("click", (e)=>{ if(e.target === box) close(); });
+
+  let lastX = 0, lastY = 0, dragging = false;
+  img.addEventListener("pointerdown", (e)=>{ if(e.pointerType === "mouse"){ dragging = true; lastX = e.clientX; lastY = e.clientY; } });
+  img.addEventListener("pointermove", (e)=>{ if(dragging && e.pointerType === "mouse"){ tx += e.clientX - lastX; ty += e.clientY - lastY; lastX = e.clientX; lastY = e.clientY; apply(); } });
+  window.addEventListener("pointerup", ()=>{ dragging = false; });
+  img.addEventListener("wheel", (e)=>{ e.preventDefault(); scale = clamp(scale * (e.deltaY < 0 ? 1.15 : 0.87), 1, 8); if(scale === 1){ tx = 0; ty = 0; } apply(); }, {passive:false});
+  img.addEventListener("dblclick", ()=>{ scale = scale > 1 ? 1 : 2.5; tx = 0; ty = 0; apply(); });
+
+  let pinch = false, startDist = 0, startScale = 1;
+  const dist = (t)=>Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  img.addEventListener("touchstart", (e)=>{
+    if(e.touches.length === 2){ pinch = true; startDist = dist(e.touches); startScale = scale; }
+    else if(e.touches.length === 1){ lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; }
+  }, {passive:false});
+  img.addEventListener("touchmove", (e)=>{
+    if(pinch && e.touches.length === 2){ e.preventDefault(); scale = clamp(startScale * dist(e.touches) / startDist, 1, 8); apply(); }
+    else if(!pinch && e.touches.length === 1 && scale > 1){ e.preventDefault(); tx += e.touches[0].clientX - lastX; ty += e.touches[0].clientY - lastY; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; apply(); }
+  }, {passive:false});
+  img.addEventListener("touchend", (e)=>{ if(e.touches.length < 2){ pinch = false; } if(scale === 1){ tx = 0; ty = 0; apply(); } });
+}
+setupLightbox();
+
+const ALLERGY_GROUPS = [
+  { title: "בשר ודגים / 肉・魚類", items: [
+    {he:"בשר לבן", jp:"豚肉"},
+    {he:"בקר", jp:"牛肉"},
+    {he:"עוף", jp:"鶏肉"},
+    {he:"בשר סוס", jp:"馬肉"},
+    {he:"בשר כבש", jp:"羊肉"},
+    {he:"דגים", jp:"魚"},
+    {he:"צלופח", jp:"うなぎ"},
+    {he:"סשימי (דג נא)", jp:"刺身"},
+    {he:"אוכל נא", jp:"生もの"},
+    {he:"פירות ים", jp:"海老、イカ等"}
+  ]},
+  { title: "אגוזים, ירקות ופירות / ナッツ・野菜・果物", items: [
+    {he:"בוטנים", jp:"落花生"},
+    {he:"אגוזי קשיו", jp:"カシューナッツ"},
+    {he:"אגוזי מלך", jp:"クルミ"},
+    {he:"שקדים", jp:"アーモンド"},
+    {he:"קוקוס", jp:"ココナッツ"},
+    {he:"פטריות", jp:"きのこ"},
+    {he:"שום ובצל", jp:"にんにく類"},
+    {he:"ירקות שורש", jp:"根菜"},
+    {he:"פירות", jp:"果物"}
+  ]},
+  { title: "שונות / その他", items: [
+    {he:"ביצה", jp:"卵"},
+    {he:"חלב (מוצרי חלב)", jp:"乳製品"},
+    {he:"דבש", jp:"はちみつ"},
+    {he:"ג'לטין", jp:"ゼラチン"},
+    {he:"חיטה", jp:"小麦"},
+    {he:"כוסמת", jp:"そば"},
+    {he:"שומשום", jp:"ごま"},
+    {he:"סויה", jp:"大豆"},
+    {he:"אלכוהול", jp:"酒"},
+    {he:"אלרגיה אחרת", jp:"他のアレルギー"}
+  ]}
+];
+
+const ALLERGY_STORAGE_KEY = "allergyChecks-v1";
+
+function loadAllergyChecks(){
+  try{ return new Set(JSON.parse(localStorage.getItem(ALLERGY_STORAGE_KEY) || "[]")); }
+  catch(e){ return new Set(); }
+}
+function saveAllergyChecks(set){
+  localStorage.setItem(ALLERGY_STORAGE_KEY, JSON.stringify([...set]));
+}
+
+function setupAllergyCard(){
+  const body = document.getElementById("allergyCardBody");
+  const modal = document.getElementById("allergyModal");
+  const checks = loadAllergyChecks();
+
+  function render(){
+    let html = `
+      <div class="header">
+        <h1 class="title-jp" dir="ltr">お食事制限</h1>
+        <h2 class="title-he">כרטיס הגבלות והעדפות מזון למסעדה</h2>
+      </div>
+      <div class="message-jp" dir="ltr">
+        誠にお手数ではございますが、以下のチェックされた食材を避けていただけますでしょうか。<br>
+        <span class="message-he">(אנא הימנעו מהמרכיבים המסומנים מטה ב-✔)</span>
+      </div>`;
+    ALLERGY_GROUPS.forEach((group, gi)=>{
+      html += `<div class="section-title">${group.title}</div><table class="allergy-table">`;
+      group.items.forEach((item, ii)=>{
+        const id = `g${gi}-i${ii}`;
+        const on = checks.has(id);
+        html += `<tr class="allergy-row ${on ? "checked" : ""}" data-id="${id}">
+          <td class="checkbox">${on ? "✔" : "☐"}</td>
+          <td>${item.he}</td>
+          <td class="jp-text" dir="ltr">${item.jp}</td>
+        </tr>`;
+      });
+      html += `</table>`;
+    });
+    body.innerHTML = html;
+    body.querySelectorAll(".allergy-row").forEach((row)=>{
+      row.onclick = ()=>{
+        const id = row.getAttribute("data-id");
+        if(checks.has(id)) checks.delete(id); else checks.add(id);
+        saveAllergyChecks(checks);
+        render();
+      };
+    });
+  }
+
+  window.openAllergyCard = function(){ render(); modal.classList.add("open"); document.body.style.overflow = "hidden"; };
+  function close(){ modal.classList.remove("open"); document.body.style.overflow = ""; }
+  document.getElementById("allergyCloseBtn").onclick = close;
+  document.getElementById("allergyResetBtn").onclick = ()=>{
+    if(confirm("לנקות את כל הסימונים?")){ checks.clear(); saveAllergyChecks(checks); render(); }
+  };
+}
+setupAllergyCard();
+document.getElementById("allergyOpenBtn").onclick = ()=>openAllergyCard();
+
+function normalizeLinkUrl(raw){
+  let url = String(raw || "")
+    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "")
+    .trim();
+  if(!url) return "";
+  if(/^www\./i.test(url)) url = "https://" + url;
+  if(!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = "https://" + url;
+  return url;
+}
+
+function looksLikeUrl(value){
+  const text = String(value || "").trim();
+  return /^(https?:\/\/|www\.|[a-z0-9-]+\.[a-z]{2,})/i.test(text);
+}
+
+function getPointLinks(item){
+  const links = [];
+  const seen = new Set();
+  const push = (title, rawUrl)=>{
+    const url = normalizeLinkUrl(rawUrl);
+    if(!url || seen.has(url)) return;
+    seen.add(url);
+    links.push({title: String(title || "").trim() || "קישור", url});
+  };
+  if(Array.isArray(item?.links)){
+    item.links.forEach((link)=>push(link?.title, link?.url));
+  }
+  push("אתר", item?.websiteUrl);
+  return links;
+}
+
+function addLinkRow(title="", url=""){
+  const editor = document.getElementById("linksEditor");
+  const row = document.createElement("div");
+  row.className = "link-row";
+
+  const titleInput = document.createElement("input");
+  titleInput.className = "link-title";
+  titleInput.placeholder = "שם הקישור (אופציונלי)";
+  titleInput.value = title;
+  titleInput.setAttribute("aria-label", "שם הקישור");
+
+  const urlInput = document.createElement("input");
+  urlInput.className = "link-url";
+  urlInput.type = "url";
+  urlInput.inputMode = "url";
+  urlInput.autocomplete = "url";
+  urlInput.placeholder = "הדביקו כאן את הכתובת https://...";
+  urlInput.value = url;
+  urlInput.dir = "ltr";
+  urlInput.setAttribute("aria-label", "כתובת הקישור");
+
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "link-remove";
+  removeBtn.setAttribute("aria-label", "הסר קישור");
+  removeBtn.textContent = "✕";
+  removeBtn.onclick = ()=>{
+    row.remove();
+    if(!editor.querySelector(".link-row")) addLinkRow();
+  };
+
+  row.appendChild(urlInput);
+  row.appendChild(titleInput);
+  row.appendChild(removeBtn);
+  editor.appendChild(row);
+  return urlInput;
+}
+
+function fillLinksEditor(links){
+  const editor = document.getElementById("linksEditor");
+  editor.innerHTML = "";
+  if(links.length) links.forEach((link)=>addLinkRow(link.title, link.url));
+  else addLinkRow();
+}
+
+function readLinksFromEditor(){
+  const rows = [...document.querySelectorAll("#linksEditor .link-row")];
+  const links = [];
+  const seen = new Set();
+  rows.forEach((row)=>{
+    let title = row.querySelector(".link-title")?.value.trim() || "";
+    let url = row.querySelector(".link-url")?.value.trim() || "";
+
+    // אם הדביקו את הכתובת בשדה השם בטעות — מתקנים אוטומטית
+    if(!url && looksLikeUrl(title)){
+      url = title;
+      title = "קישור";
+    } else if(url && !looksLikeUrl(url) && looksLikeUrl(title)){
+      const swapped = url;
+      url = title;
+      title = swapped;
+    }
+
+    url = normalizeLinkUrl(url);
+    if(!url || seen.has(url)) return;
+    seen.add(url);
+    links.push({title: title || "קישור", url});
+  });
+  return links;
+}
+
+document.getElementById("addLinkBtn").onclick = ()=>{
+  const input = addLinkRow();
+  setTimeout(()=>input?.focus(), 30);
+};
+
+function mapsUrl(item){
+  if(item.mapLink && item.mapLink.trim()) return normalizeLinkUrl(item.mapLink);
+  return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(item.address || item.place || "");
+}
+
+function telUrl(phone){
+  return "tel:" + String(phone || "").replace(/[^0-9+]/g, "");
+}
+
+function escapeHtml(value){
+  const div = document.createElement("div");
+  div.textContent = value || "";
+  return div.innerHTML;
+}
+
+function linkify(text){
+  return escapeHtml(text).replace(/(https?:\/\/[^\s<]+)/g, (url)=>{
+    const clean = url.replace(/[).,]+$/, "");
+    const trail = url.slice(clean.length);
+    return `<a href="${clean}" target="_blank" rel="noopener">${clean}</a>${trail}`;
+  });
+}
+
+function sortedPoints(){
+  return [...points].sort((a,b)=>
+    dayNum(a.day) - dayNum(b.day) ||
+    String(a.day || "").localeCompare(String(b.day || "")) ||
+    timeNum(a.time) - timeNum(b.time)
+  );
+}
+
+function uniqueDays(){
+  const seen = [];
+  sortedPoints().forEach((item)=>{
+    if(item.day && !seen.includes(item.day)) seen.push(item.day);
+  });
+  return seen;
+}
+
+function renderDayFilter(){
+  const current = dayFilter.value;
+  const currentMapDay = mapDayFilter.value;
+  dayFilter.innerHTML = '<option value="all">כל הימים</option>';
+  mapDayFilter.innerHTML = '<option value="all">כל הימים</option>';
+  uniqueDays().forEach((day)=>{
+    const option = document.createElement("option");
+    option.value = day;
+    option.textContent = day;
+    dayFilter.appendChild(option);
+    const mapOption = option.cloneNode(true);
+    mapDayFilter.appendChild(mapOption);
+  });
+  if([...dayFilter.options].some((option)=>option.value === current)){
+    dayFilter.value = current;
+  }
+  if([...mapDayFilter.options].some((option)=>option.value === currentMapDay)){
+    mapDayFilter.value = currentMapDay;
+  }
+}
+
+function filteredPoints(){
+  const q = searchBox.value.trim().toLowerCase();
+  const day = dayFilter.value;
+  const status = statusFilter.value;
+  return sortedPoints().filter((item)=>{
+    if(day !== "all" && item.day !== day) return false;
+    if(status === "open" && item.done) return false;
+    if(status === "done" && !item.done) return false;
+    if(!q) return true;
+    return [item.place, item.notes, item.desc, item.address, item.cost]
+      .some((value)=>String(value || "").toLowerCase().includes(q));
+  });
+}
+
+function updateStats(){
+  const done = points.filter((item)=>item.done).length;
+  stats.textContent = `${done} מתוך ${points.length} נקודות הושלמו`;
+}
+
+function renderRoute(){
+  renderDayFilter();
+  updateStats();
+  const list = filteredPoints();
+  routeList.classList.remove("loading");
+  routeList.innerHTML = "";
+
+  if(!list.length){
+    routeList.innerHTML = '<div class="empty">לא נמצאו נקודות במסלול</div>';
+    renderMapList([]);
+    return;
+  }
+
+  const grouped = new Map();
+  list.forEach((item)=>{
+    if(!grouped.has(item.day)) grouped.set(item.day, []);
+    grouped.get(item.day).push(item);
+  });
+
+  grouped.forEach((items, day)=>{
+    const group = document.createElement("section");
+    group.className = "day-group";
+    const title = document.createElement("div");
+    title.className = "day-title";
+    const date = items[0]?.date ? ` · ${items[0].date}` : "";
+    title.innerHTML = `<span>${escapeHtml(day)}${escapeHtml(date)}</span><span class="day-count">${items.length} נקודות</span>`;
+    group.appendChild(title);
+    items.forEach((item)=>group.appendChild(renderCard(item)));
+    routeList.appendChild(group);
+  });
+
+  renderMapList(list);
+}
+
+function renderCard(item){
+  const card = document.createElement("article");
+  card.className = "card" + (item.done ? " done" : "");
+
+  const photoUrl = driveUrlToImg(item.photoUrl || "");
+  if(photoUrl){
+    const img = document.createElement("img");
+    img.className = "card-photo";
+    img.src = photoUrl;
+    img.loading = "lazy";
+    img.alt = item.place || "תמונה";
+    img.onerror = ()=>{ img.remove(); };
+    img.onclick = ()=>openLightbox(photoUrl);
+    card.appendChild(img);
+  }
+
+  const main = document.createElement("div");
+  main.className = "card-main";
+
+  const content = document.createElement("div");
+  const time = document.createElement("div");
+  time.className = "time-chip";
+  time.textContent = item.time || "ללא שעה";
+  content.appendChild(time);
+
+  const name = document.createElement("h2");
+  name.className = "card-name";
+  name.textContent = item.place || "ללא שם";
+  content.appendChild(name);
+
+  if(item.notes){
+    const notes = document.createElement("p");
+    notes.className = "card-notes";
+    notes.textContent = item.notes;
+    content.appendChild(notes);
+  }
+
+  const wikiText = WIKI_SUMMARIES[item.address || ""];
+  if(wikiText){
+    const wiki = document.createElement("div");
+    wiki.className = "wiki-summary";
+    wiki.textContent = wikiText;
+    content.appendChild(wiki);
+  }
+
+  const checkLabel = document.createElement("label");
+  checkLabel.className = "check-wrap";
+  const check = document.createElement("input");
+  check.type = "checkbox";
+  check.checked = !!item.done;
+  check.setAttribute("aria-label", `סמן כהושלם: ${item.place || ""}`);
+  check.onchange = ()=>updateDoc(doc(db, "points", item.id), {done: check.checked});
+  checkLabel.appendChild(check);
+  checkLabel.appendChild(document.createTextNode("בוצע"));
+
+  main.appendChild(content);
+  main.appendChild(checkLabel);
+  card.appendChild(main);
+
+  const pills = document.createElement("div");
+  pills.className = "pills";
+  if(item.cost && item.cost !== "-"){
+    const pill = document.createElement("span");
+    pill.className = "pill";
+    pill.textContent = `עלות: ${item.cost}`;
+    pills.appendChild(pill);
+  }
+  if(item.rating){
+    const pill = document.createElement("span");
+    pill.className = "pill";
+    pill.textContent = `דירוג: ${"★".repeat(item.rating)}`;
+    pills.appendChild(pill);
+  }
+  if(pills.children.length) card.appendChild(pills);
+
+  const actions = document.createElement("div");
+  actions.className = "actions";
+
+  const map = document.createElement("a");
+  map.href = mapsUrl(item);
+  map.target = "_blank";
+  map.rel = "noopener";
+  map.className = "primary-action";
+  map.textContent = "נווט";
+  actions.appendChild(map);
+
+  if(item.phone){
+    const call = document.createElement("a");
+    call.href = telUrl(item.phone);
+    call.className = "map-action";
+    call.textContent = "חיוג";
+    actions.appendChild(call);
+  }
+
+  getPointLinks(item).forEach((link)=>{
+    const website = document.createElement("a");
+    website.href = link.url;
+    website.target = "_blank";
+    website.rel = "noopener noreferrer";
+    website.className = "map-action";
+    website.textContent = link.title;
+    website.onclick = (event)=>{
+      // ב-PWA באייפון לפעמים target=_blank נחסם — פותחים במפורש
+      event.preventDefault();
+      window.open(link.url, "_blank", "noopener,noreferrer");
+    };
+    actions.appendChild(website);
+  });
+
+  const edit = document.createElement("button");
+  edit.className = "soft-action";
+  edit.textContent = "עריכה";
+  edit.onclick = ()=>openModal(item);
+  actions.appendChild(edit);
+
+  const remove = document.createElement("button");
+  remove.className = "danger-action";
+  remove.textContent = "מחיקה";
+  remove.onclick = ()=>{
+    if(confirm(`למחוק את "${item.place || "הנקודה"}"? הפעולה תשפיע על כל המשתמשים.`)){
+      deleteDoc(doc(db, "points", item.id));
+    }
+  };
+  actions.appendChild(remove);
+  card.appendChild(actions);
+
+  const restoData = RESTAURANT_TIPS[item.address || ""];
+  if(restoData){
+    const restoBtn = document.createElement("button");
+    restoBtn.className = "resto-btn";
+    restoBtn.textContent = "מסעדות מומלצות";
+    const restoPanel = document.createElement("div");
+    restoPanel.className = "resto-panel";
+    let html = `<strong>${escapeHtml(restoData.title)}</strong>`;
+    restoData.items.forEach((restaurant)=>{
+      html += `<strong>${escapeHtml(restaurant.name)}</strong>${escapeHtml(restaurant.desc)}`;
+    });
+    if(restoData.tip){
+      html += `<div class="resto-tip">${escapeHtml(restoData.tip)}</div>`;
+    }
+    restoPanel.innerHTML = html;
+    restoBtn.onclick = ()=>{
+      restoPanel.classList.toggle("open");
+      restoBtn.textContent = restoPanel.classList.contains("open") ? "הסתר מסעדות" : "מסעדות מומלצות";
+    };
+    card.appendChild(restoBtn);
+    card.appendChild(restoPanel);
+  }
+
+  const details = document.createElement("details");
+  details.className = "details";
+  const summary = document.createElement("summary");
+  summary.textContent = "פרטים נוספים והערה אישית";
+  details.appendChild(summary);
+
+  if(item.desc){
+    const desc = document.createElement("div");
+    desc.className = "card-desc";
+    desc.textContent = item.desc;
+    details.appendChild(desc);
+  }
+
+  const stars = document.createElement("div");
+  stars.className = "stars-row";
+  stars.appendChild(document.createTextNode("דירוג:"));
+  for(let i = 1; i <= 5; i++){
+    const star = document.createElement("button");
+    star.className = "star" + (i <= (item.rating || 0) ? " filled" : "");
+    star.type = "button";
+    star.textContent = "★";
+    star.setAttribute("aria-label", `דרג ${i} מתוך 5`);
+    star.onclick = ()=>updateDoc(doc(db, "points", item.id), {rating: i});
+    stars.appendChild(star);
+  }
+  details.appendChild(stars);
+
+  const noteBox = document.createElement("div");
+  noteBox.className = "note-box";
+  const textarea = document.createElement("textarea");
+  textarea.rows = 3;
+  textarea.placeholder = "הערה אישית, רשימת קניות, מה לא לפספס...";
+  textarea.value = item.myNotes || "";
+  const saveNote = document.createElement("button");
+  saveNote.className = "map-action";
+  saveNote.textContent = "שמור הערה אישית";
+  saveNote.onclick = ()=>updateDoc(doc(db, "points", item.id), {myNotes: textarea.value.trim()});
+  noteBox.appendChild(textarea);
+  noteBox.appendChild(saveNote);
+  details.appendChild(noteBox);
+  card.appendChild(details);
+
+  return card;
+}
+
+function renderMapList(list = filteredPoints()){
+  mapList.innerHTML = "";
+  if(!list.length){
+    mapList.innerHTML = '<div class="empty">אין נקודות להצגה</div>';
+    return;
+  }
+  list.forEach((item)=>{
+    const card = document.createElement("div");
+    card.className = "tool-card";
+    const title = document.createElement("h2");
+    title.textContent = `${item.time || ""} ${item.place || ""}`.trim();
+    const info = document.createElement("p");
+    info.textContent = `${item.day || ""}${item.address ? " · " + item.address : ""}`;
+    const actions = document.createElement("div");
+    actions.className = "actions";
+    const nav = document.createElement("a");
+    nav.href = mapsUrl(item);
+    nav.target = "_blank";
+    nav.rel = "noopener";
+    nav.className = "primary-action wide";
+    nav.textContent = "פתח ניווט בגוגל מאפ";
+    actions.appendChild(nav);
+    card.appendChild(title);
+    card.appendChild(info);
+    card.appendChild(actions);
+    mapList.appendChild(card);
+  });
+}
+
+function geocacheKey(address){
+  return "geo:" + address;
+}
+
+async function geocode(address){
+  if(!address) return null;
+  const key = geocacheKey(address);
+  const cached = localStorage.getItem(key);
+  if(cached) return JSON.parse(cached);
+  try{
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`, {
+      headers: {"Accept-Language":"en"}
+    });
+    const json = await response.json();
+    if(json.length){
+      const result = {lat:parseFloat(json[0].lat), lng:parseFloat(json[0].lon)};
+      localStorage.setItem(key, JSON.stringify(result));
+      return result;
+    }
+  }catch(error){}
+  return null;
+}
+
+function ensureMap(){
+  if(leafletMap || !window.L) return;
+  leafletMap = window.L.map("mapEl").setView([35.5, 136.5], 6);
+  window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution:"© OpenStreetMap contributors",
+    maxZoom:19
+  }).addTo(leafletMap);
+}
+
+async function renderMapMarkers(){
+  ensureMap();
+  if(!leafletMap) return;
+  mapMarkers.forEach((marker)=>marker.remove());
+  mapMarkers = [];
+
+  const days = uniqueDays();
+  const filterDay = mapDayFilter.value;
+  const list = filterDay === "all" ? sortedPoints() : sortedPoints().filter((item)=>item.day === filterDay);
+  const bounds = [];
+  let processed = 0;
+
+  for(const item of list){
+    if(!item.address) continue;
+    processed++;
+    mapStatus.textContent = `ממפה נקודות... ${processed}/${list.length}`;
+    const coords = await geocode(item.address);
+    if(!coords) continue;
+    const color = DAY_COLORS[Math.max(0, days.indexOf(item.day)) % DAY_COLORS.length];
+    const icon = window.L.divIcon({
+      className:"",
+      html:`<div style="width:16px;height:16px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.35)"></div>`,
+      iconSize:[16,16],
+      iconAnchor:[8,8]
+    });
+    const popup = `<b>${escapeHtml(item.place)}</b><br><span>${escapeHtml(item.day || "")}${item.time ? " · " + escapeHtml(item.time) : ""}</span><br><a href="${mapsUrl(item)}" target="_blank" rel="noopener">פתח ניווט</a>`;
+    const marker = window.L.marker([coords.lat, coords.lng], {icon}).bindPopup(popup).addTo(leafletMap);
+    mapMarkers.push(marker);
+    bounds.push([coords.lat, coords.lng]);
+    await new Promise((resolve)=>setTimeout(resolve, 650));
+  }
+
+  if(bounds.length > 1) leafletMap.fitBounds(bounds, {padding:[30,30]});
+  if(bounds.length === 1) leafletMap.setView(bounds[0], 13);
+  mapStatus.textContent = `${bounds.length} נקודות על המפה`;
+  setTimeout(()=>leafletMap.invalidateSize(), 100);
+}
+
+let locationMarker = null;
+let locationCircle = null;
+let locationWatchId = null;
+let locationCentered = false;
+
+function locateMe(){
+  ensureMap();
+  if(!leafletMap) return;
+  if(!navigator.geolocation){
+    mapStatus.textContent = "הדפדפן לא תומך באיתור מיקום";
+    return;
+  }
+  mapStatus.textContent = "מאתר את המיקום שלך...";
+  locationCentered = false;
+  if(locationWatchId !== null) navigator.geolocation.clearWatch(locationWatchId);
+
+  locationWatchId = navigator.geolocation.watchPosition((pos)=>{
+    const {latitude, longitude, accuracy} = pos.coords;
+    const latlng = [latitude, longitude];
+    if(locationMarker){
+      locationMarker.setLatLng(latlng);
+    } else {
+      const icon = window.L.divIcon({
+        className:"",
+        html:'<div class="my-location-dot"></div>',
+        iconSize:[22,22],
+        iconAnchor:[11,11]
+      });
+      locationMarker = window.L.marker(latlng, {icon, zIndexOffset:1000}).bindPopup("אתה כאן").addTo(leafletMap);
+    }
+    if(locationCircle){
+      locationCircle.setLatLng(latlng).setRadius(accuracy);
+    } else {
+      locationCircle = window.L.circle(latlng, {radius:accuracy, color:"#2c7ab2", fillColor:"#2c7ab2", fillOpacity:0.12, weight:1}).addTo(leafletMap);
+    }
+    if(!locationCentered){
+      leafletMap.setView(latlng, 15);
+      locationCentered = true;
+    }
+    mapStatus.textContent = `המיקום שלך מסומן (דיוק בערך ${Math.round(accuracy)} מטר)`;
+  }, (err)=>{
+    const messages = {
+      1: "הגישה למיקום נדחתה. אפשר לאשר הרשאת מיקום להאתר בהגדרות הדפדפן.",
+      2: "לא ניתן לאתר את המיקום כרגע.",
+      3: "האיתור ארך יותר מדי, נסה שוב."
+    };
+    mapStatus.textContent = messages[err.code] || "שגיאה באיתור מיקום";
+  }, {enableHighAccuracy:true, maximumAge:10000, timeout:15000});
+}
+
+function guideCategory(section){
+  return (section.category && section.category.trim()) || DEFAULT_CATEGORY;
+}
+
+function categoriesInUse(){
+  const seen = [];
+  guide.forEach((section)=>{
+    const category = guideCategory(section);
+    if(!seen.includes(category)) seen.push(category);
+  });
+  return seen.sort((a, b)=>a.localeCompare(b, "he"));
+}
+
+function categorySuggestions(){
+  const set = new Set(DEFAULT_GUIDE_CATEGORIES);
+  categoriesInUse().forEach((category)=>set.add(category));
+  return [...set];
+}
+
+function renderCategoryOptions(){
+  const datalist = document.getElementById("categoryOptions");
+  datalist.innerHTML = "";
+  categorySuggestions().forEach((category)=>{
+    const option = document.createElement("option");
+    option.value = category;
+    datalist.appendChild(option);
+  });
+}
+
+function renderGuideCategoryFilter(){
+  const current = guideCategoryFilter.value;
+  guideCategoryFilter.innerHTML = '<option value="all">כל הקטגוריות</option>';
+  categoriesInUse().forEach((category)=>{
+    const option = document.createElement("option");
+    option.value = category;
+    option.textContent = category;
+    guideCategoryFilter.appendChild(option);
+  });
+  if([...guideCategoryFilter.options].some((option)=>option.value === current)){
+    guideCategoryFilter.value = current;
+  }
+}
+
+function renderGuideCard(section){
+  const card = document.createElement("article");
+  card.className = "guide-card";
+  if(section.photoUrl){
+    const img = document.createElement("img");
+    img.className = "card-photo";
+    img.src = section.photoUrl;
+    img.loading = "lazy";
+    img.alt = section.title || "תמונה";
+    img.onerror = ()=>{ img.remove(); };
+    img.onclick = ()=>openLightbox(section.photoUrl);
+    card.appendChild(img);
+  }
+  const title = document.createElement("h2");
+  title.textContent = section.title || "ללא כותרת";
+  const content = document.createElement("p");
+  content.innerHTML = linkify(section.content || "");
+  const actions = document.createElement("div");
+  actions.className = "actions";
+  const edit = document.createElement("button");
+  edit.className = "soft-action";
+  edit.textContent = "עריכה";
+  edit.onclick = ()=>openSectionModal(section);
+  const remove = document.createElement("button");
+  remove.className = "danger-action";
+  remove.textContent = "מחיקה";
+  remove.onclick = ()=>{
+    if(confirm(`למחוק את הסעיף "${section.title || "ללא כותרת"}"?`)){
+      deleteDoc(doc(db, "guide", section.id));
+    }
+  };
+  actions.appendChild(edit);
+  actions.appendChild(remove);
+  card.appendChild(title);
+  card.appendChild(content);
+  card.appendChild(actions);
+  return card;
+}
+
+function renderGuide(){
+  guideList.classList.remove("loading");
+  guideList.innerHTML = "";
+  renderGuideCategoryFilter();
+  renderCategoryOptions();
+
+  if(!guide.length){
+    guideList.innerHTML = '<div class="empty">אין סעיפים במדריך</div>';
+    return;
+  }
+
+  const filterCategory = guideCategoryFilter.value;
+  const grouped = new Map();
+  [...guide]
+    .sort((a, b)=>(a.order || 999) - (b.order || 999))
+    .forEach((section)=>{
+      const category = guideCategory(section);
+      if(filterCategory !== "all" && category !== filterCategory) return;
+      if(!grouped.has(category)) grouped.set(category, []);
+      grouped.get(category).push(section);
+    });
+
+  if(!grouped.size){
+    guideList.innerHTML = '<div class="empty">אין סעיפים בקטגוריה זו</div>';
+    return;
+  }
+
+  [...grouped.keys()]
+    .sort((a, b)=>a.localeCompare(b, "he"))
+    .forEach((category)=>{
+      const header = document.createElement("div");
+      header.className = "cat-title";
+      header.innerHTML = `<span>${escapeHtml(category)}</span><span class="count">${grouped.get(category).length} סעיפים</span>`;
+      guideList.appendChild(header);
+      grouped.get(category).forEach((section)=>guideList.appendChild(renderGuideCard(section)));
+    });
+}
+
+function openModal(item){
+  document.getElementById("modalTitle").textContent = item ? "עריכת נקודת עניין" : "נקודת עניין חדשה";
+  document.getElementById("f_id").value = item?.id || "";
+  const days = uniqueDays();
+  document.getElementById("f_day").value = item?.day || days[days.length - 1] || "";
+  document.getElementById("f_date").value = item?.date || "";
+  document.getElementById("f_time").value = item?.time || "";
+  document.getElementById("f_place").value = item?.place || "";
+  document.getElementById("f_address").value = item?.address || "";
+  document.getElementById("f_maplink").value = item?.mapLink || "";
+  fillLinksEditor(getPointLinks(item));
+  document.getElementById("f_photo").value = item?.photoUrl || "";
+  document.getElementById("f_phone").value = item?.phone || "";
+  document.getElementById("f_notes").value = item?.notes || "";
+  document.getElementById("f_desc").value = item?.desc || "";
+  document.getElementById("f_cost").value = item?.cost || "";
+  previewImg();
+  document.getElementById("pointModal").classList.add("open");
+  setTimeout(()=>document.getElementById("f_place").focus(), 50);
+}
+
+function closeModal(){
+  document.getElementById("pointModal").classList.remove("open");
+}
+
+document.getElementById("cancelBtn").onclick = closeModal;
+document.getElementById("pointModal").onclick = (event)=>{
+  if(event.target.id === "pointModal") closeModal();
+};
+document.getElementById("addBtn").onclick = ()=>openModal(null);
+
+window.previewImg = function(){
+  const img = document.getElementById("imgPreview");
+  const url = driveUrlToImg(document.getElementById("f_photo").value.trim());
+  if(url){
+    img.src = url;
+    img.style.display = "block";
+  } else {
+    img.removeAttribute("src");
+    img.style.display = "none";
+  }
+};
+
+window.previewSectionImg = function(){
+  const img = document.getElementById("sectionImgPreview");
+  const url = driveUrlToImg(document.getElementById("s_photo").value.trim());
+  if(url){
+    img.src = url;
+    img.style.display = "block";
+  } else {
+    img.removeAttribute("src");
+    img.style.display = "none";
+  }
+};
+
+document.getElementById("f_photo_file").addEventListener("change", async (event)=>{
+  const file = event.target.files[0];
+  if(!file) return;
+  const status = document.getElementById("uploadStatus");
+  status.textContent = "מכין תמונה...";
+  try{
+    const base64 = await resizeImageToBase64(file);
+    document.getElementById("f_photo").value = base64;
+    status.textContent = "התמונה מוכנה";
+    previewImg();
+  }catch(error){
+    status.textContent = "שגיאה בהכנת התמונה";
+  }
+});
+
+document.getElementById("s_photo_file").addEventListener("change", async (event)=>{
+  const file = event.target.files[0];
+  if(!file) return;
+  const status = document.getElementById("sectionUploadStatus");
+  const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+  status.textContent = isPdf ? "ממיר PDF לתמונה..." : "מכין תמונה...";
+  try{
+    const base64 = isPdf ? await pdfToImageBase64(file) : await resizeImageToBase64(file);
+    document.getElementById("s_photo").value = base64;
+    status.textContent = "התמונה מוכנה";
+    previewSectionImg();
+  }catch(error){
+    status.textContent = "שגיאה: " + (error.message || error);
+  }
+});
+
+document.getElementById("s_photo_clear").onclick = ()=>{
+  document.getElementById("s_photo").value = "";
+  document.getElementById("s_photo_file").value = "";
+  document.getElementById("sectionUploadStatus").textContent = "התמונה הוסרה (לחצו שמירה)";
+  previewSectionImg();
+};
+
+function openSectionModal(section){
+  document.getElementById("sectionModalTitle").textContent = section ? "עריכת סעיף" : "סעיף חדש";
+  document.getElementById("s_id").value = section?.id || "";
+  renderCategoryOptions();
+  const activeFilter = guideCategoryFilter.value;
+  document.getElementById("s_category").value = section
+    ? guideCategory(section)
+    : (activeFilter && activeFilter !== "all" ? activeFilter : "");
+  document.getElementById("s_title").value = section?.title || "";
+  document.getElementById("s_photo").value = section?.photoUrl || "";
+  document.getElementById("s_content").value = section?.content || "";
+  document.getElementById("sectionUploadStatus").textContent = "";
+  previewSectionImg();
+  document.getElementById("sectionModal").classList.add("open");
+}
+
+function closeSectionModal(){
+  document.getElementById("sectionModal").classList.remove("open");
+}
+
+document.getElementById("guideAddBtn").onclick = ()=>openSectionModal(null);
+document.getElementById("sectionCancelBtn").onclick = closeSectionModal;
+document.getElementById("sectionModal").onclick = (event)=>{
+  if(event.target.id === "sectionModal") closeSectionModal();
+};
+
+document.getElementById("sectionSaveBtn").onclick = async ()=>{
+  const id = document.getElementById("s_id").value;
+  const title = document.getElementById("s_title").value.trim();
+  const category = document.getElementById("s_category").value.trim() || DEFAULT_CATEGORY;
+  const photoUrl = driveUrlToImg(document.getElementById("s_photo").value.trim());
+  const content = document.getElementById("s_content").value.trim();
+  if(!title){
+    alert("יש להזין כותרת");
+    return;
+  }
+  if(id){
+    await updateDoc(doc(db, "guide", id), {title, category, photoUrl, content});
+  } else {
+    const maxOrder = guide.reduce((max, section)=>Math.max(max, section.order || 0), 0);
+    await addDoc(guideRef, {title, category, photoUrl, content, order:maxOrder + 1});
+  }
+  closeSectionModal();
+};
+
+document.getElementById("saveBtn").onclick = async ()=>{
+  const id = document.getElementById("f_id").value;
+  const place = document.getElementById("f_place").value.trim();
+  if(!place){
+    alert("יש להזין שם מקום");
+    return;
+  }
+
+  const links = readLinksFromEditor();
+  const payload = {
+    day: document.getElementById("f_day").value.trim() || "ללא יום",
+    date: document.getElementById("f_date").value.trim(),
+    time: document.getElementById("f_time").value.trim(),
+    place,
+    address: document.getElementById("f_address").value.trim(),
+    mapLink: normalizeLinkUrl(document.getElementById("f_maplink").value.trim()),
+    links,
+    websiteUrl: links[0]?.url || "",
+    photoUrl: driveUrlToImg(document.getElementById("f_photo").value.trim()),
+    phone: document.getElementById("f_phone").value.trim(),
+    notes: document.getElementById("f_notes").value.trim(),
+    desc: document.getElementById("f_desc").value.trim(),
+    cost: document.getElementById("f_cost").value.trim() || "-"
+  };
+
+  try{
+    if(id){
+      await updateDoc(doc(db, "points", id), payload);
+    } else {
+      await addDoc(pointsRef, {...payload, done:false});
+    }
+    closeModal();
+  }catch(error){
+    console.error(error);
+    alert("השמירה נכשלה: " + (error.message || error));
+  }
+};
+
+document.getElementById("exportBtn").onclick = async ()=>{
+  const pointsSnap = await getDocs(pointsRef);
+  const guideSnap = await getDocs(guideRef);
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    appVersion: "v2",
+    points: pointsSnap.docs.map((item)=>({id:item.id, ...item.data()})),
+    guide: guideSnap.docs.map((item)=>({id:item.id, ...item.data()}))
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const date = new Date().toLocaleDateString("he-IL").replace(/\//g, "-");
+  link.href = url;
+  link.download = `גיבוי-יפן-v2-${date}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
+document.getElementById("importFile").addEventListener("change", async (event)=>{
+  const file = event.target.files[0];
+  if(!file) return;
+  if(!confirm("שחזור יוסיף את כל הנקודות והסעיפים מהגיבוי למסד הנתונים המשותף. להמשיך?")){
+    event.target.value = "";
+    return;
+  }
+
+  const text = await file.text();
+  let backup;
+  try{
+    backup = JSON.parse(text);
+  }catch(error){
+    alert("קובץ גיבוי לא תקין");
+    event.target.value = "";
+    return;
+  }
+
+  if(!Array.isArray(backup.points)){
+    alert("קובץ הגיבוי לא מזוהה");
+    event.target.value = "";
+    return;
+  }
+
+  const batch = writeBatch(db);
+  backup.points.forEach((item)=>{
+    const {id, ...payload} = item;
+    batch.set(doc(pointsRef), payload);
+  });
+  if(Array.isArray(backup.guide)){
+    backup.guide.forEach((item)=>{
+      const {id, ...payload} = item;
+      batch.set(doc(guideRef), payload);
+    });
+  }
+  await batch.commit();
+  event.target.value = "";
+  alert(`שוחזרו ${backup.points.length} נקודות בהצלחה`);
+});
+
+document.getElementById("dedupBtn").onclick = async ()=>{
+  const snapshot = await getDocs(pointsRef);
+  const all = snapshot.docs.map((item)=>({id:item.id, ...item.data()}));
+  const seen = {};
+  const toDelete = [];
+
+  all.forEach((item)=>{
+    const key = `${String(item.place || "").trim()}|${String(item.day || "").trim()}|${String(item.time || "").trim()}`;
+    if(seen[key]){
+      const existing = seen[key];
+      const existingScore = Object.values(existing).filter((value)=>value && value !== "-").length;
+      const currentScore = Object.values(item).filter((value)=>value && value !== "-").length;
+      if(currentScore > existingScore){
+        toDelete.push(existing.id);
+        seen[key] = item;
+      } else {
+        toDelete.push(item.id);
+      }
+    } else {
+      seen[key] = item;
+    }
+  });
+
+  if(!toDelete.length){
+    alert("לא נמצאו כפילויות");
+    return;
+  }
+
+  if(confirm(`נמצאו ${toDelete.length} כפילויות. למחוק אותן מהנתונים המשותפים?`)){
+    const batch = writeBatch(db);
+    toDelete.forEach((id)=>batch.delete(doc(db, "points", id)));
+    await batch.commit();
+    alert(`נמחקו ${toDelete.length} כפילויות`);
+  }
+};
+
+document.querySelectorAll(".nav-btn").forEach((button)=>{
+  button.onclick = ()=>{
+    const nextView = button.dataset.view;
+    document.querySelectorAll(".nav-btn").forEach((btn)=>btn.classList.toggle("active", btn === button));
+    document.querySelectorAll(".view").forEach((view)=>view.classList.toggle("active", view.id === nextView));
+    routeFilters.style.display = nextView === "routeView" ? "grid" : "none";
+    window.scrollTo({top:0, behavior:"smooth"});
+    if(nextView === "mapView") setTimeout(renderMapMarkers, 120);
+  };
+});
+
+searchBox.oninput = renderRoute;
+dayFilter.onchange = renderRoute;
+statusFilter.onchange = renderRoute;
+mapDayFilter.onchange = renderMapMarkers;
+guideCategoryFilter.onchange = renderGuide;
+document.getElementById("refreshMapBtn").onclick = renderMapMarkers;
+document.getElementById("locateBtn").onclick = locateMe;
+
+function startSync(){
+  onSnapshot(pointsRef, (snapshot)=>{
+    points = snapshot.docs.map((item)=>({id:item.id, ...item.data()}));
+    syncBadge.textContent = "מסונכרן";
+    syncBadge.classList.remove("error");
+    renderRoute();
+    if(document.getElementById("mapView").classList.contains("active")){
+      renderMapMarkers();
+    }
+  }, (error)=>{
+    syncBadge.textContent = "שגיאת חיבור";
+    syncBadge.classList.add("error");
+    routeList.innerHTML = `<div class="empty">שגיאת חיבור: ${escapeHtml(error.message)}</div>`;
+  });
+
+  onSnapshot(guideRef, (snapshot)=>{
+    guide = snapshot.docs.map((item)=>({id:item.id, ...item.data()}));
+    renderGuide();
+  }, (error)=>{
+    guideList.innerHTML = `<div class="empty">שגיאת טעינת מדריך: ${escapeHtml(error.message)}</div>`;
+  });
+}
+
+let syncStarted = false;
+onAuthStateChanged(auth, (user)=>{
+  if(!user || syncStarted) return;
+  syncStarted = true;
+  startSync();
+});
+
+signInAnonymously(auth).catch((error)=>{
+  syncBadge.textContent = "שגיאת התחברות";
+  syncBadge.classList.add("error");
+  routeList.innerHTML = `<div class="empty">שגיאת התחברות: ${escapeHtml(error.code)}</div>`;
+});
+</script>
+</body>
+</html>
