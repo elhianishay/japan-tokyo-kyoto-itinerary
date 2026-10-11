@@ -141,6 +141,16 @@
     font-size:0.92rem;
   }
 
+  .progress{margin-top:8px;}
+  .progress-bar{height:10px;background:#e6dcc2;border-radius:999px;overflow:hidden;}
+  .progress-fill{height:100%;width:0;background:linear-gradient(90deg,#4f8a3c,var(--green));border-radius:999px;transition:width .35s ease;}
+  .progress-text{display:flex;justify-content:space-between;font-size:0.82rem;color:var(--muted);margin-top:3px;font-weight:700;}
+  .day-nav{display:flex;align-items:center;gap:8px;}
+  .day-nav button{flex:0 0 auto;min-width:96px;background:var(--blue);border-color:var(--blue);color:#fff;}
+  .day-nav button:disabled{opacity:.35;cursor:default;}
+  .day-nav-label{flex:1;text-align:center;font-weight:800;font-size:0.92rem;line-height:1.25;}
+  .day-nav-label small{display:block;font-weight:500;color:var(--muted);font-size:0.78rem;}
+
   main{
     width:min(100%,820px);
     margin:0 auto;
@@ -154,7 +164,7 @@
 
   .day-title{
     position:sticky;
-    top:144px;
+    top:calc(var(--header-h, 144px) - 4px);
     z-index:8;
     display:flex;
     align-items:center;
@@ -645,9 +655,9 @@
 
   @media (max-width:430px){
     html{font-size:17px;}
-    .filter-row{grid-template-columns:1fr;}
+    .filter-row{grid-template-columns:1fr 1fr;}
     .actions{grid-template-columns:1fr;}
-    .day-title{top:190px;}
+    .day-title{top:calc(var(--header-h, 190px) - 4px);}
     .card-main{grid-template-columns:1fr;}
     .guide-toolbar{grid-template-columns:1fr;}
     .check-wrap{
@@ -716,6 +726,10 @@
     </div>
     <h1>המסלול שלי ביפן</h1>
     <div class="stats" id="stats">13.11 עד 25.11.2026</div>
+    <div class="progress">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-text"><span id="progressDone"></span><span id="progressLeft"></span></div>
+    </div>
   </div>
   <div class="filters" id="routeFilters">
     <input id="searchBox" type="search" placeholder="חיפוש מקום, הערה או תיאור">
@@ -726,6 +740,11 @@
         <option value="open">רק פתוחים</option>
         <option value="done">רק הושלמו</option>
       </select>
+    </div>
+    <div class="day-nav">
+      <button id="dayPrev" type="button" aria-label="יום קודם">→ יום קודם</button>
+      <div class="day-nav-label" id="dayNavLabel">כל הימים</div>
+      <button id="dayNext" type="button" aria-label="יום הבא">יום הבא ←</button>
     </div>
   </div>
 </header>
@@ -1443,7 +1462,56 @@ function filteredPoints(){
 function updateStats(){
   const done = points.filter((item)=>item.done).length;
   stats.textContent = `${done} מתוך ${points.length} נקודות הושלמו`;
+  updateProgress(points.length, done);
 }
+
+// סרגל התקדמות כללי + ניווט בין ימים (יום קודם / יום הבא).
+function updateProgress(total, done){
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById("progressFill").style.width = pct + "%";
+  document.getElementById("progressDone").textContent = `✔ בוצעו ${done} (${pct}%)`;
+  document.getElementById("progressLeft").textContent = `נותרו ${total - done}`;
+
+  const days = uniqueDays();
+  const cur = dayFilter.value;
+  const idx = days.indexOf(cur);
+  const label = document.getElementById("dayNavLabel");
+  label.textContent = "";
+  const small = document.createElement("small");
+  if(cur === "all" || idx < 0){
+    label.append("כל הימים");
+    small.textContent = `${days.length} ימים · ${done}/${total} בוצעו`;
+  }else{
+    const inDay = points.filter((item)=>item.day === cur);
+    const doneDay = inDay.filter((item)=>item.done).length;
+    const date = (inDay.find((item)=>item.date) || {}).date || "";
+    label.append(date ? `${cur} · ${date}` : cur);
+    small.textContent = `${doneDay}/${inDay.length} בוצעו ביום זה`;
+  }
+  label.appendChild(small);
+  document.getElementById("dayPrev").disabled = !(cur === "all" ? days.length : idx > 0);
+  document.getElementById("dayNext").disabled = !(cur === "all" ? days.length : idx >= 0 && idx < days.length - 1);
+}
+
+function goDay(delta){
+  const days = uniqueDays();
+  if(!days.length) return;
+  let i = dayFilter.value === "all" ? (delta > 0 ? -1 : days.length) : days.indexOf(dayFilter.value);
+  i += delta;
+  if(i < 0 || i >= days.length) return;
+  dayFilter.value = days[i];
+  renderRoute();
+  window.scrollTo({top: 0, behavior: "smooth"});
+}
+document.getElementById("dayPrev").onclick = ()=>goDay(-1);
+document.getElementById("dayNext").onclick = ()=>goDay(1);
+
+// גובה הכותרת הקבועה משתנה (סרגל + חצים) — כותרות הימים נצמדות מתחתיה לפי הגובה האמיתי.
+const appHeaderEl = document.querySelector(".app-header");
+const syncHeaderHeight = ()=>document.documentElement.style.setProperty("--header-h", appHeaderEl.offsetHeight + "px");
+syncHeaderHeight();
+if(window.ResizeObserver) new ResizeObserver(syncHeaderHeight).observe(appHeaderEl);
+window.addEventListener("resize", syncHeaderHeight);
 
 function renderRoute(){
   renderDayFilter();
